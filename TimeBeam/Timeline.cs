@@ -20,13 +20,17 @@ namespace TimeBeam {
       get { return _trackHeight; }
       set { _trackHeight = value; }
     }
-
+    /// <summary>
+    /// Backing field for <see cref="TrackHeight"/>.
+    /// </summary>
     private int _trackHeight = 20;
 
     /// <summary>
-    /// How wide/high the border around a track item should be.
-    /// This border allows you to interact with an item, even when it has zero size.
+    /// How wide/high the border on a track item should be.
+    /// This border allows you to interact with an item.
     /// </summary>
+    [Description( "How wide/high the border on a track item should be." )]
+    [Category( "Layout" )]
     public int TrackBorderSize {
       get { return _trackBorderSize; }
       set { _trackBorderSize = value; }
@@ -35,6 +39,20 @@ namespace TimeBeam {
     /// Backing field for <see cref="TrackBorderSize"/>.
     /// </summary>
     private int _trackBorderSize = 2;
+
+    /// <summary>
+    /// How much space should be left between every track.
+    /// </summary>
+    [Description( "How much space should be left between every track." )]
+    [Category( "Layout" )]
+    public int TrackSpacing {
+      get { return _trackSpacing; }
+      set { _trackSpacing = value; }
+    }
+    /// <summary>
+    /// Backing field for <see cref="TrackSpacing"/>.
+    /// </summary>
+    private int _trackSpacing = 1;
     #endregion
 
     #region Drawing
@@ -92,13 +110,20 @@ namespace TimeBeam {
       int trackOffset = 0;
       foreach( ITimelineTrack track in Tracks ) {
         // The extent of the track, including the border
-        RectangleF trackExtent = new RectangleF( track.Start - TrackBorderSize, trackOffset, track.End + TrackBorderSize, TrackHeight + TrackBorderSize * 2 );
+        RectangleF trackExtent = new RectangleF( track.Start, trackOffset, track.End, TrackHeight );
 
         GraphicsContainer.FillRectangle( new SolidBrush( Color.DarkRed ), trackExtent );
-        GraphicsContainer.DrawRectangle( new Pen( Color.Fuchsia,TrackBorderSize ), trackExtent.X, trackExtent.Y, trackExtent.Width, trackExtent.Height );
+        
+        // Compensate for border size
+        trackExtent.X += TrackBorderSize/2f;
+        trackExtent.Y += TrackBorderSize/2f;
+        trackExtent.Height -= TrackBorderSize;
+        trackExtent.Width -= TrackBorderSize;
+        
+        GraphicsContainer.DrawRectangle( new Pen( Color.WhiteSmoke,TrackBorderSize ), trackExtent.X, trackExtent.Y, trackExtent.Width, trackExtent.Height );
 
         // Offset the next track to the appropriate position.
-        trackOffset += ( TrackBorderSize * 2 ) + TrackHeight;
+        trackOffset += TrackHeight + TrackSpacing;
       }
     }
 
