@@ -112,6 +112,23 @@ namespace TimeBeam {
       Refresh();
     }
 
+    private ITimelineTrack TrackHitTest( PointF test ) {
+      int trackOffset = 0;
+      foreach( ITimelineTrack track in Tracks ) {
+        // The extent of the track, including the border
+        RectangleF trackExtent = new RectangleF( track.Start - TrackBorderSize, trackOffset, track.End + TrackBorderSize, TrackHeight + TrackBorderSize * 2 );
+
+        if( trackExtent.Contains( test ) ) {
+          return track;
+        }
+
+        // Offset the next track to the appropriate position.
+        trackOffset += ( TrackBorderSize * 2 ) + TrackHeight;
+      }
+
+      return null;
+    }
+
     #region Event Handler
     /// <summary>
     ///   Invoked when the control is resized.
@@ -142,7 +159,15 @@ namespace TimeBeam {
       Redraw();
       Refresh();
     }
-    #endregion
 
+    private void Timeline_MouseMove( object sender, MouseEventArgs e ) {
+      ITimelineTrack focusedTrack = TrackHitTest( new PointF( e.X, e.Y ) );
+      if( null != focusedTrack ) {
+        Cursor = Cursors.SizeAll;
+      } else {
+        Cursor = Cursors.Arrow;
+      }
+    }
+    #endregion
   }
 }

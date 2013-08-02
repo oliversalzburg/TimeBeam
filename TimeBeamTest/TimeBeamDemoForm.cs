@@ -15,9 +15,13 @@ namespace TimeBeamTest {
     }
 
     private void TimeBeamDemoForm_Load( object sender, EventArgs e ) {
-      AdjustMyLength sampleObject = new AdjustMyLength();
-      sampleObject.End = 50f;
-      timeline1.AddTrack( sampleObject );
+      AdjustMyLength track0 = new AdjustMyLength();
+      track0.End = 50f;
+      AdjustMyLength track1 = new AdjustMyLength();
+      track1.Start = 20f;
+      track1.End = 150f;
+      timeline1.AddTrack( track0 );
+      timeline1.AddTrack( track1 );
     }
   }
 }
