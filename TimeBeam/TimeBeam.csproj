@@ -60,6 +60,12 @@
     <Compile Include="Scrollbar\AbstractScrollbar.Designer.cs">
       <DependentUpon>AbstractScrollbar.cs</DependentUpon>
     </Compile>
+    <Compile Include="Timeline.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Timeline.Designer.cs">
+      <DependentUpon>Timeline.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Scrollbar\AbstractScrollbar.resx">
@@ -70,6 +76,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Scrollbar\HorizontalScrollbar.resx">
       <DependentUpon>HorizontalScrollbar.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Timeline.resx">
+      <DependentUpon>Timeline.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
