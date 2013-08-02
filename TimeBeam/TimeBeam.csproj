@@ -41,6 +41,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Helper\ColorHelper.cs" />
+    <Compile Include="Helper\Extensions.cs" />
     <Compile Include="ITimelineTrack.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Scrollbar\VerticalScrollbar.cs">

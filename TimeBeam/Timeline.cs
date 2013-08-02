@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
+using TimeBeam.Helper;
 
 namespace TimeBeam {
   /// <summary>
@@ -107,20 +108,26 @@ namespace TimeBeam {
       // Clear the buffer
       GraphicsContainer.Clear( BackgroundColor );
 
+      // Generate colors for the tracks.
+      List<Color> colors = ColorHelper.GetRandomColors( Tracks.Count );
+
       int trackOffset = 0;
-      foreach( ITimelineTrack track in Tracks ) {
+      for( int trackIndex = 0; trackIndex < Tracks.Count; trackIndex++ ) {
+        ITimelineTrack track = Tracks[ trackIndex ];
+        Color trackColor = colors[ trackIndex ];
+
         // The extent of the track, including the border
         RectangleF trackExtent = new RectangleF( track.Start, trackOffset, track.End, TrackHeight );
 
-        GraphicsContainer.FillRectangle( new SolidBrush( Color.DarkRed ), trackExtent );
-        
+        GraphicsContainer.FillRectangle( new SolidBrush( trackColor ), trackExtent );
+
         // Compensate for border size
-        trackExtent.X += TrackBorderSize/2f;
-        trackExtent.Y += TrackBorderSize/2f;
+        trackExtent.X += TrackBorderSize / 2f;
+        trackExtent.Y += TrackBorderSize / 2f;
         trackExtent.Height -= TrackBorderSize;
         trackExtent.Width -= TrackBorderSize;
-        
-        GraphicsContainer.DrawRectangle( new Pen( Color.WhiteSmoke,TrackBorderSize ), trackExtent.X, trackExtent.Y, trackExtent.Width, trackExtent.Height );
+
+        GraphicsContainer.DrawRectangle( new Pen( Color.WhiteSmoke, TrackBorderSize ), trackExtent.X, trackExtent.Y, trackExtent.Width, trackExtent.Height );
 
         // Offset the next track to the appropriate position.
         trackOffset += TrackHeight + TrackSpacing;
