@@ -1,5 +1,5 @@
 ﻿namespace TimeBeam.Scrollbar {
-  sealed partial class HorizontalScrollbar {
+  sealed partial class VerticalScrollbar {
     /// <summary> 
     /// Required designer variable.
     /// </summary>
@@ -25,15 +25,15 @@
     private void InitializeComponent() {
       this.SuspendLayout();
       // 
-      // HorizontalScrollbar
+      // VerticalScrollbar
       // 
       this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
       this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-      this.Name = "HorizontalScrollbar";
-      this.Size = new System.Drawing.Size(300, 20);
-      this.Load += new System.EventHandler(this.HorizontalScrollbarLoad);
-      this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.HorizontalScrollbarMouseDown);
-      this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.HorizontalScrollbarMouseMove);
+      this.Name = "VerticalScrollbar";
+      this.Size = new System.Drawing.Size(20, 300);
+      this.Load += new System.EventHandler(this.VerticalScrollbarLoad);
+      this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.VerticalScrollbarMouseDown);
+      this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.VerticalScrollbarMouseMove);
       this.ResumeLayout(false);
 
     }

@@ -42,6 +42,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Scrollbar\VerticalScrollbar.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Scrollbar\VerticalScrollbar.Designer.cs">
+      <DependentUpon>VerticalScrollbar.cs</DependentUpon>
+    </Compile>
     <Compile Include="Scrollbar\HorizontalScrollbar.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -58,6 +64,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Scrollbar\AbstractScrollbar.resx">
       <DependentUpon>AbstractScrollbar.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Scrollbar\VerticalScrollbar.resx">
+      <DependentUpon>VerticalScrollbar.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Scrollbar\HorizontalScrollbar.resx">
       <DependentUpon>HorizontalScrollbar.cs</DependentUpon>

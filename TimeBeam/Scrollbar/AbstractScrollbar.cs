@@ -60,8 +60,9 @@ namespace TimeBeam {
       get { return _backgroundColor; }
       set { _backgroundColor = value; }
     }
+
     /// <summary>
-    /// Backing field for <see cref="BackgroundColor"/>.
+    ///   Backing field for <see cref="BackgroundColor" />.
     /// </summary>
     private Color _backgroundColor = Color.Black;
 
@@ -80,8 +81,9 @@ namespace TimeBeam {
         ForegroundBrush = new SolidBrush( _foregroundColor );
       }
     }
+
     /// <summary>
-    /// Backing field for <see cref="ForegroundColor"/>.
+    ///   Backing field for <see cref="ForegroundColor" />.
     /// </summary>
     private Color _foregroundColor = Color.Gray;
 
