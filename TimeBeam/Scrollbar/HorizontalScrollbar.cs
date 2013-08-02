@@ -22,8 +22,31 @@ namespace TimeBeam.Scrollbar {
       // Clear the buffer
       GraphicsContainer.Clear( BackgroundColor );
 
+      // Get the correct thumb center point for the current value.
+      float thumbCenter = ValueToPosition( Value );
+
+      // Calculate the position of the thumb
+      ThumbBounds.X = (int)( thumbCenter - ThumbBounds.Width / 2f );
+
+      // Determine the margin that applied in regards to the height.
+      int margin = ( Height - ThumbBounds.Height );
+      // We now subtract the same margin from the width.
+      // TODO: It would be nicer to have a set margin that is subtracted from the control width and included in all calculations.
+      Rectangle visibleBounds = ThumbBounds;
+      visibleBounds.X += margin / 2;
+      visibleBounds.Width -= margin;
+
+      GraphicsContainer.FillRectangle( ForegroundBrush, visibleBounds );
+    }
+
+    /// <summary>
+    ///   Calculate the position (of the center of the thumb) for a given value.
+    /// </summary>
+    /// <param name="value">A given value within the defined bounds.</param>
+    /// <returns>The center point of the thumb for the given value.</returns>
+    private int ValueToPosition( int value ) {
       // Start by defining the value on a scale of 0 to 1.
-      float relativeValue = (float)Value / ( Max - Min );
+      float relativeValue = (float)value / ( Max - Min );
       // Subtract 0.5 to get the offset for our value from the center of the bar
       float centerOffset = relativeValue - 0.5f;
 
@@ -32,14 +55,11 @@ namespace TimeBeam.Scrollbar {
       // Now we find the center of the thumb by adding the offset to the center of width.
       float thumbCenter = halfWidth + ( centerOffset * ( Width - ThumbBounds.Width ) );
 
-      // Calculate the position of the thumb
-      ThumbBounds.X = (int)( thumbCenter - ThumbBounds.Width / 2f );
-
-      GraphicsContainer.FillRectangle( ForegroundBrush, ThumbBounds );
+      return (int)thumbCenter;
     }
 
     /// <summary>
-    /// Calculate a value within the defined bounds for a given value on the bar.
+    ///   Calculate a value within the defined bounds for a given value on the bar.
     /// </summary>
     /// <param name="position">The position (in pixels) on the bar.</param>
     /// <returns>The value that corresponds to the given position on the bar.</returns>
@@ -51,43 +71,64 @@ namespace TimeBeam.Scrollbar {
       // Now calculate the relative position (on a scale from 0 to 1) within the bounds where the thumb is taken into account.
       int halfThumbWidth = ThumbBounds.Width / 2;
       float relativePosition = (float)( position - halfThumbWidth ) / constrainedWidth;
-      
+
       // Use the relative position to calculate a value...
       int assumedValue = (int)( relativePosition * ( Max - Min ) );
       // ...and limit the value to be within the given bounds.
       int limitedValue = Math.Max( Min, Math.Min( Max, assumedValue ) );
-      
+
       return limitedValue;
     }
 
     /// <summary>
-    /// Recalculates the size of the thumb on the bar depending on the extent of the possible values.
+    ///   Recalculates the size of the thumb on the bar depending on the extent of the possible values.
     /// </summary>
     private void RecalculateThumbBounds() {
       // The smallest possible size for the thumb should be 10% of the width
       float minWidth = Width * 0.1f;
       float naiveWidth = (float)Width - ( Max - Min );
-      ThumbBounds.Width = (int)Math.Max( minWidth, naiveWidth );
+      ThumbBounds.Width = (int)Math.Max( minWidth, naiveWidth * 0.1f );
+
+      // Add a 10% margin on top and bottom.
+      ThumbBounds.Height = (int)( Height * 0.8f );
+      ThumbBounds.Y = (int)( Height * 0.1f );
     }
 
     /// <summary>
-    /// Invoked when the control was initially loaded
+    ///   Invoked when the control was initially loaded.
     /// </summary>
     /// <param name="sender"></param>
     /// <param name="e"></param>
-    private void HorizontalScrollbar_Load( object sender, System.EventArgs e ) {
+    private void HorizontalScrollbarLoad( object sender, EventArgs e ) {
       RecalculateThumbBounds();
       Redraw();
       Refresh();
     }
 
-    private void HorizontalScrollbar_MouseMove( object sender, MouseEventArgs e ) {
+    /// <summary>
+    ///   Invoked when the user moves the mouse over the control.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private void HorizontalScrollbarMouseMove( object sender, MouseEventArgs e ) {
       if( ( e.Button & MouseButtons.Left ) != 0 ) {
-        Value = PositionToValue( e.X );
+        int delta = e.X - ScrollDeltaOrigin;
+        Value = PositionToValue( ScrollOrigin + delta );
+        Debug.WriteLine( Value );
         RecalculateThumbBounds();
         Redraw();
         Refresh();
       }
+    }
+
+    /// <summary>
+    ///   Invoked when the user presses a mouse button while focus is on the control.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private void HorizontalScrollbarMouseDown( object sender, MouseEventArgs e ) {
+      ScrollDeltaOrigin = e.X;
+      ScrollOrigin = ValueToPosition( Value );
     }
   }
 }

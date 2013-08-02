@@ -46,7 +46,7 @@ namespace TimeBeam {
     private Bitmap PixelMap { get; set; }
 
     /// <summary>
-    ///   The <see cref="Graphics"/> object to draw into the backbuffer.
+    ///   The <see cref="Graphics" /> object to draw into the backbuffer.
     /// </summary>
     protected Graphics GraphicsContainer { get; set; }
 
@@ -60,7 +60,9 @@ namespace TimeBeam {
       get { return _backgroundColor; }
       set { _backgroundColor = value; }
     }
-
+    /// <summary>
+    /// Backing field for <see cref="BackgroundColor"/>.
+    /// </summary>
     private Color _backgroundColor = Color.Black;
 
 
@@ -78,7 +80,9 @@ namespace TimeBeam {
         ForegroundBrush = new SolidBrush( _foregroundColor );
       }
     }
-
+    /// <summary>
+    /// Backing field for <see cref="ForegroundColor"/>.
+    /// </summary>
     private Color _foregroundColor = Color.Gray;
 
     /// <summary>
@@ -87,9 +91,25 @@ namespace TimeBeam {
     protected Brush ForegroundBrush = new SolidBrush( Color.Gray );
 
     /// <summary>
-    /// The bounds of the thumb that is used to define the value on the bar.
+    ///   The bounds of the thumb that is used to define the value on the bar.
     /// </summary>
-    protected Rectangle ThumbBounds = new Rectangle(0,0,0,0);
+    protected Rectangle ThumbBounds = new Rectangle( 0, 0, 0, 0 );
+    #endregion
+
+    #region Scrolling
+    /// <summary>
+    ///   The pixel position at which the user started holding down the mouse button that will activate the scrolling action.
+    ///   This is used to calculate an offset during the scrolling process and then apply it onto the original position of the thumb.
+    /// </summary>
+    /// <see cref="ScrollOrigin" />
+    protected int ScrollDeltaOrigin;
+
+    /// <summary>
+    ///   The original position of the thumb when a scrolling process started.
+    ///   The delta that is continously calculated during the scrolling process is applied onto this origin.
+    /// </summary>
+    /// <see cref="ScrollDeltaOrigin" />
+    protected int ScrollOrigin;
     #endregion
 
     /// <summary>

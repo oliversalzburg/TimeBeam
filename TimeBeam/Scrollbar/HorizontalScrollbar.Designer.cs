@@ -31,8 +31,9 @@
       this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
       this.Name = "HorizontalScrollbar";
       this.Size = new System.Drawing.Size(324, 55);
-      this.Load += new System.EventHandler(this.HorizontalScrollbar_Load);
-      this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.HorizontalScrollbar_MouseMove);
+      this.Load += new System.EventHandler(this.HorizontalScrollbarLoad);
+      this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.HorizontalScrollbarMouseDown);
+      this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.HorizontalScrollbarMouseMove);
       this.ResumeLayout(false);
 
     }

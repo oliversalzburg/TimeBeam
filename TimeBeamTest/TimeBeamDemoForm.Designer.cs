@@ -30,13 +30,13 @@
       // 
       this.horizontalScrollbar1.BackgroundColor = System.Drawing.Color.Black;
       this.horizontalScrollbar1.ForegroundColor = System.Drawing.Color.Gray;
-      this.horizontalScrollbar1.Location = new System.Drawing.Point(12, 12);
+      this.horizontalScrollbar1.Location = new System.Drawing.Point(12, 190);
       this.horizontalScrollbar1.Max = 100;
       this.horizontalScrollbar1.Min = 0;
       this.horizontalScrollbar1.Name = "horizontalScrollbar1";
-      this.horizontalScrollbar1.Size = new System.Drawing.Size(509, 63);
+      this.horizontalScrollbar1.Size = new System.Drawing.Size(1022, 20);
       this.horizontalScrollbar1.TabIndex = 0;
-      this.horizontalScrollbar1.Value = 50;
+      this.horizontalScrollbar1.Value = 20;
       // 
       // TimeBeamDemoForm
       // 
