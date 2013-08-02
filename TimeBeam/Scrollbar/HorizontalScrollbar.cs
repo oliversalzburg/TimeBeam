@@ -19,6 +19,8 @@ namespace TimeBeam.Scrollbar {
     ///   Redraws the scrollbar into the backbuffer.
     /// </summary>
     protected override void Redraw() {
+      RecalculateThumbBounds();
+
       // Clear the buffer
       GraphicsContainer.Clear( BackgroundColor );
 
@@ -100,7 +102,6 @@ namespace TimeBeam.Scrollbar {
     /// <param name="sender"></param>
     /// <param name="e"></param>
     private void HorizontalScrollbarLoad( object sender, EventArgs e ) {
-      RecalculateThumbBounds();
       Redraw();
       Refresh();
     }
@@ -114,8 +115,6 @@ namespace TimeBeam.Scrollbar {
       if( ( e.Button & MouseButtons.Left ) != 0 ) {
         int delta = e.X - ScrollDeltaOrigin;
         Value = PositionToValue( ScrollOrigin + delta );
-        Debug.WriteLine( Value );
-        RecalculateThumbBounds();
         Redraw();
         Refresh();
       }

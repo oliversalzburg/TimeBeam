@@ -147,9 +147,8 @@ namespace TimeBeam {
     /// <param name="e"></param>
     private void AbstractScrollbarResize( object sender, EventArgs e ) {
       InitializePixelMap();
-
-      // Set the thumb to the same height as the bar.
-      ThumbBounds.Height = Height;
+      Redraw();
+      Refresh();
     }
 
     /// <summary>

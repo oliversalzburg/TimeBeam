@@ -23,33 +23,35 @@
     /// the contents of this method with the code editor.
     /// </summary>
     private void InitializeComponent() {
-      this.horizontalScrollbar1 = new TimeBeam.Scrollbar.HorizontalScrollbar();
       this.verticalScrollbar1 = new TimeBeam.Scrollbar.VerticalScrollbar();
+      this.horizontalScrollbar1 = new TimeBeam.Scrollbar.HorizontalScrollbar();
       this.SuspendLayout();
-      // 
-      // horizontalScrollbar1
-      // 
-      this.horizontalScrollbar1.BackgroundColor = System.Drawing.Color.Black;
-      this.horizontalScrollbar1.ForegroundColor = System.Drawing.Color.Gray;
-      this.horizontalScrollbar1.Location = new System.Drawing.Point(12, 190);
-      this.horizontalScrollbar1.Max = 100;
-      this.horizontalScrollbar1.Min = 0;
-      this.horizontalScrollbar1.Name = "horizontalScrollbar1";
-      this.horizontalScrollbar1.Size = new System.Drawing.Size(999, 20);
-      this.horizontalScrollbar1.TabIndex = 0;
-      this.horizontalScrollbar1.Value = 20;
       // 
       // verticalScrollbar1
       // 
       this.verticalScrollbar1.BackgroundColor = System.Drawing.Color.Black;
+      this.verticalScrollbar1.Dock = System.Windows.Forms.DockStyle.Right;
       this.verticalScrollbar1.ForegroundColor = System.Drawing.Color.Gray;
-      this.verticalScrollbar1.Location = new System.Drawing.Point(1014, 12);
+      this.verticalScrollbar1.Location = new System.Drawing.Point(1026, 0);
       this.verticalScrollbar1.Max = 100;
       this.verticalScrollbar1.Min = 0;
       this.verticalScrollbar1.Name = "verticalScrollbar1";
-      this.verticalScrollbar1.Size = new System.Drawing.Size(20, 172);
+      this.verticalScrollbar1.Size = new System.Drawing.Size(20, 202);
       this.verticalScrollbar1.TabIndex = 1;
       this.verticalScrollbar1.Value = 0;
+      // 
+      // horizontalScrollbar1
+      // 
+      this.horizontalScrollbar1.BackgroundColor = System.Drawing.Color.Black;
+      this.horizontalScrollbar1.Dock = System.Windows.Forms.DockStyle.Bottom;
+      this.horizontalScrollbar1.ForegroundColor = System.Drawing.Color.Gray;
+      this.horizontalScrollbar1.Location = new System.Drawing.Point(0, 202);
+      this.horizontalScrollbar1.Max = 100;
+      this.horizontalScrollbar1.Min = 0;
+      this.horizontalScrollbar1.Name = "horizontalScrollbar1";
+      this.horizontalScrollbar1.Size = new System.Drawing.Size(1046, 20);
+      this.horizontalScrollbar1.TabIndex = 0;
+      this.horizontalScrollbar1.Value = 20;
       // 
       // TimeBeamDemoForm
       // 
