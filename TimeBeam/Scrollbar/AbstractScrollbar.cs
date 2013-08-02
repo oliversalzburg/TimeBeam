@@ -17,7 +17,6 @@ namespace TimeBeam {
     /// <summary>
     ///   The current value of the scrollbar.
     /// </summary>
-    [DisplayName( "Value" )]
     [Description( "The current value of the scrollbar." )]
     [Category( "Value" )]
     public int Value { get; set; }
@@ -25,7 +24,6 @@ namespace TimeBeam {
     /// <summary>
     ///   The smallest possible value of the scrollbar.
     /// </summary>
-    [DisplayName( "Min" )]
     [Description( "The smallest possible value of the scrollbar." )]
     [Category( "Value" )]
     public int Min { get; set; }
@@ -33,7 +31,6 @@ namespace TimeBeam {
     /// <summary>
     ///   The largest possible value of the scrollbar.
     /// </summary>
-    [DisplayName( "Max" )]
     [Description( "The largest possible value of the scrollbar." )]
     [Category( "Value" )]
     public int Max {
@@ -58,7 +55,6 @@ namespace TimeBeam {
     /// <summary>
     ///   The background color of the scrollbar.
     /// </summary>
-    [DisplayName( "Background Color" )]
     [Description( "The background color of the scrollbar." )]
     [Category( "Drawing" )]
     public Color BackgroundColor {
@@ -75,7 +71,6 @@ namespace TimeBeam {
     /// <summary>
     ///   The foreground color of the scrollbar.
     /// </summary>
-    [DisplayName( "Foreground Color" )]
     [Description( "The foreground color of the scrollbar." )]
     [Category( "Drawing" )]
     [Browsable( true )]
