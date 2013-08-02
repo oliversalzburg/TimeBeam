@@ -8,6 +8,11 @@ namespace TimeBeam {
   ///   A scrollbar.
   /// </summary>
   public partial class AbstractScrollbar : UserControl {
+    /// <summary>
+    /// Thumb will always be at least this wide/high.
+    /// </summary>
+    public const int MinThumbExtent = 10;
+
     #region Value
     /// <summary>
     ///   The current value of the scrollbar.

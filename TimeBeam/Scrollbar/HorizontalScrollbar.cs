@@ -86,8 +86,8 @@ namespace TimeBeam.Scrollbar {
     ///   Recalculates the size of the thumb on the bar depending on the extent of the possible values.
     /// </summary>
     private void RecalculateThumbBounds() {
-      // The smallest possible size for the thumb should be 10% of the width
-      float minWidth = Width * 0.1f;
+      // The smallest possible size for the thumb should be 10% of the width or MinThumbExtent; whatever is bigger
+      float minWidth = Math.Max( MinThumbExtent, Width * 0.1f );
       float naiveWidth = (float)Width - ( Max - Min );
       ThumbBounds.Width = (int)Math.Max( minWidth, naiveWidth * 0.1f );
 
