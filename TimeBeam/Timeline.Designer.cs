@@ -62,8 +62,11 @@
       this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
       this.Controls.Add(this.verticalScrollbar1);
       this.Controls.Add(this.horizontalScrollbar1);
+      this.DoubleBuffered = true;
       this.Name = "Timeline";
       this.Size = new System.Drawing.Size(800, 200);
+      this.Paint += new System.Windows.Forms.PaintEventHandler(this.TimelinePaint);
+      this.Resize += new System.EventHandler(this.TimelineResize);
       this.ResumeLayout(false);
 
     }
