@@ -7,10 +7,9 @@ using TimeBeam.Helper;
 
 namespace TimeBeam {
   /// <summary>
-  /// The main host control.
+  ///   The main host control.
   /// </summary>
   public partial class Timeline : UserControl {
-
     #region Layout
     /// <summary>
     ///   How high a single track should be.
@@ -21,14 +20,15 @@ namespace TimeBeam {
       get { return _trackHeight; }
       set { _trackHeight = value; }
     }
+
     /// <summary>
-    /// Backing field for <see cref="TrackHeight"/>.
+    ///   Backing field for <see cref="TrackHeight" />.
     /// </summary>
     private int _trackHeight = 20;
 
     /// <summary>
-    /// How wide/high the border on a track item should be.
-    /// This border allows you to interact with an item.
+    ///   How wide/high the border on a track item should be.
+    ///   This border allows you to interact with an item.
     /// </summary>
     [Description( "How wide/high the border on a track item should be." )]
     [Category( "Layout" )]
@@ -36,13 +36,14 @@ namespace TimeBeam {
       get { return _trackBorderSize; }
       set { _trackBorderSize = value; }
     }
+
     /// <summary>
-    /// Backing field for <see cref="TrackBorderSize"/>.
+    ///   Backing field for <see cref="TrackBorderSize" />.
     /// </summary>
     private int _trackBorderSize = 2;
 
     /// <summary>
-    /// How much space should be left between every track.
+    ///   How much space should be left between every track.
     /// </summary>
     [Description( "How much space should be left between every track." )]
     [Category( "Layout" )]
@@ -50,8 +51,9 @@ namespace TimeBeam {
       get { return _trackSpacing; }
       set { _trackSpacing = value; }
     }
+
     /// <summary>
-    /// Backing field for <see cref="TrackSpacing"/>.
+    ///   Backing field for <see cref="TrackSpacing" />.
     /// </summary>
     private int _trackSpacing = 1;
     #endregion
@@ -83,8 +85,17 @@ namespace TimeBeam {
     private Color _backgroundColor = Color.Black;
     #endregion
 
-    private List<ITimelineTrack> Tracks  = new List<ITimelineTrack>();
+    #region Tracks
+    /// <summary>
+    ///   The tracks currently placed on the timeline.
+    /// </summary>
+    private List<ITimelineTrack> Tracks = new List<ITimelineTrack>();
 
+    /// <summary>
+    ///   The currently selected track.
+    /// </summary>
+    private ITimelineTrack SelectedTrack = null;
+    #endregion
 
     /// <summary>
     ///   Construct a new timeline.
@@ -94,6 +105,10 @@ namespace TimeBeam {
       InitializePixelMap();
     }
 
+    /// <summary>
+    ///   Add a track to the timeline.
+    /// </summary>
+    /// <param name="track">The track to add.</param>
     public void AddTrack( ITimelineTrack track ) {
       Tracks.Add( track );
       Redraw();
@@ -103,7 +118,6 @@ namespace TimeBeam {
     /// <summary>
     ///   Redraws the timeline.
     /// </summary>
-    /// <exception cref="NotImplementedException">Should be overridden in derived class.</exception>
     private void Redraw() {
       // Clear the buffer
       GraphicsContainer.Clear( BackgroundColor );
@@ -114,11 +128,19 @@ namespace TimeBeam {
       int trackOffset = 0;
       for( int trackIndex = 0; trackIndex < Tracks.Count; trackIndex++ ) {
         ITimelineTrack track = Tracks[ trackIndex ];
+
+        // Determine colors for this track
         Color trackColor = colors[ trackIndex ];
+        Color borderColor = Color.Black;
+
+        if( track == SelectedTrack ) {
+          borderColor = Color.WhiteSmoke;
+        }
 
         // The extent of the track, including the border
         RectangleF trackExtent = new RectangleF( track.Start, trackOffset, track.End, TrackHeight );
 
+        // Draw the main track area.
         GraphicsContainer.FillRectangle( new SolidBrush( trackColor ), trackExtent );
 
         // Compensate for border size
@@ -127,7 +149,7 @@ namespace TimeBeam {
         trackExtent.Height -= TrackBorderSize;
         trackExtent.Width -= TrackBorderSize;
 
-        GraphicsContainer.DrawRectangle( new Pen( Color.WhiteSmoke, TrackBorderSize ), trackExtent.X, trackExtent.Y, trackExtent.Width, trackExtent.Height );
+        GraphicsContainer.DrawRectangle( new Pen( borderColor, TrackBorderSize ), trackExtent.X, trackExtent.Y, trackExtent.Width, trackExtent.Height );
 
         // Offset the next track to the appropriate position.
         trackOffset += TrackHeight + TrackSpacing;
@@ -183,7 +205,7 @@ namespace TimeBeam {
     }
 
     /// <summary>
-    /// Invoked once the timeline has loaded.
+    ///   Invoked once the timeline has loaded.
     /// </summary>
     /// <param name="sender"></param>
     /// <param name="e"></param>
@@ -192,13 +214,48 @@ namespace TimeBeam {
       Refresh();
     }
 
-    private void Timeline_MouseMove( object sender, MouseEventArgs e ) {
+    /// <summary>
+    ///   Invoked when the cursor is moved over the control.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private void TimelineMouseMove( object sender, MouseEventArgs e ) {
+      // Is the left mouse button pressed?
+      if( ( e.Button & MouseButtons.Left ) != 0 ) {
+        ITimelineTrack focusedTrack = TrackHitTest( new PointF( e.X, e.Y ) );
+        if( null != focusedTrack && focusedTrack == SelectedTrack ) {
+          Cursor = Cursors.SizeAll;
+        } else {
+          Cursor = Cursors.Arrow;
+        }
+      }
+    }
+
+    /// <summary>
+    ///   Invoked when the user presses a mouse button over the control.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private void TimelineMouseDown( object sender, MouseEventArgs e ) {
       ITimelineTrack focusedTrack = TrackHitTest( new PointF( e.X, e.Y ) );
       if( null != focusedTrack ) {
-        Cursor = Cursors.SizeAll;
+        focusedTrack.Selected();
+        SelectedTrack = focusedTrack;
       } else {
-        Cursor = Cursors.Arrow;
+        SelectedTrack = null;
       }
+      Redraw();
+      Refresh();
+    }
+
+    /// <summary>
+    /// Invoked when the user releases the mouse cursor over the control.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private void TimelineMouseUp( object sender, MouseEventArgs e ) {
+      // Reset cursor
+      Cursor = Cursors.Arrow;
     }
     #endregion
   }
