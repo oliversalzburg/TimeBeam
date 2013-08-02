@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeBeam", "TimeBeam\TimeBeam.csproj", "{5F95B084-2BF9-4A8D-8D83-F50FBE1B959C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeBeamTest", "TimeBeamTest\TimeBeamTest.csproj", "{96219DDA-6FDF-44B6-9098-0136BFD44C01}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -13,6 +15,10 @@ Global
 		{5F95B084-2BF9-4A8D-8D83-F50FBE1B959C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5F95B084-2BF9-4A8D-8D83-F50FBE1B959C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5F95B084-2BF9-4A8D-8D83-F50FBE1B959C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{96219DDA-6FDF-44B6-9098-0136BFD44C01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{96219DDA-6FDF-44B6-9098-0136BFD44C01}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{96219DDA-6FDF-44B6-9098-0136BFD44C01}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{96219DDA-6FDF-44B6-9098-0136BFD44C01}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
