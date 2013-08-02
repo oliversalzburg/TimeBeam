@@ -1,5 +1,5 @@
 ﻿namespace TimeBeam {
-  partial class Scrollbar {
+  partial class AbstractScrollbar {
     /// <summary> 
     /// Required designer variable.
     /// </summary>
@@ -23,12 +23,19 @@
     /// the contents of this method with the code editor.
     /// </summary>
     private void InitializeComponent() {
-      components = new System.ComponentModel.Container();
+      this.SuspendLayout();
+      // 
+      // AbstractScrollbar
+      // 
+      this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
       this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-
       this.DoubleBuffered = true;
-      this.Paint += new System.Windows.Forms.PaintEventHandler(this.ScrollbarPaint);
-      this.Resize += new System.EventHandler(this.ScrollbarResize);
+      this.Name = "AbstractScrollbar";
+      this.Size = new System.Drawing.Size(284, 51);
+      this.Paint += new System.Windows.Forms.PaintEventHandler(this.AbstractScrollbarPaint);
+      this.Resize += new System.EventHandler(this.AbstractScrollbarResize);
+      this.ResumeLayout(false);
+
     }
 
     #endregion
