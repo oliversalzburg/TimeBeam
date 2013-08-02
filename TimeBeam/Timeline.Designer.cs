@@ -65,6 +65,7 @@
       this.DoubleBuffered = true;
       this.Name = "Timeline";
       this.Size = new System.Drawing.Size(800, 200);
+      this.Load += new System.EventHandler(this.TimelineLoad);
       this.Paint += new System.Windows.Forms.PaintEventHandler(this.TimelinePaint);
       this.Resize += new System.EventHandler(this.TimelineResize);
       this.ResumeLayout(false);

@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ITimelineTrack.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Scrollbar\VerticalScrollbar.cs">
       <SubType>UserControl</SubType>
