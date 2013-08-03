@@ -182,7 +182,7 @@ namespace TimeBeam {
         Color trackColor = colors[ trackIndex ];
         Color borderColor = Color.Black;
 
-        if( track == _selectedTracks ) {
+        if( _selectedTracks.Contains( track ) ) {
           borderColor = Color.WhiteSmoke;
         }
 
@@ -337,6 +337,7 @@ namespace TimeBeam {
         // Tell the track that it was selected.
         focusedTrack.Selected();
         // Store a reference to the selected track
+        _selectedTracks.Clear();
         _selectedTracks.Add(  focusedTrack );
         // Store the current position of the track and the mouse position.
         // We'll use both later to move the track around.
@@ -365,6 +366,28 @@ namespace TimeBeam {
     /// <param name="sender"></param>
     /// <param name="e"></param>
     private void TimelineMouseUp( object sender, MouseEventArgs e ) {
+      // Store the current mouse position.
+      PointF location = new PointF( e.X, e.Y );
+
+      if( CurrentMode == BehaviorMode.Selecting ) {
+        // If we were selecting, it's now time to finalize the selection
+        // Construct the correct rectangle spanning from the selection origin to the current cursor position.
+        RectangleF selectionRectangle = RectangleHelper.Normalize( _selectionOrigin.Value, location );
+
+        int trackOffset = 0;
+        for( int trackIndex = 0; trackIndex < _tracks.Count; trackIndex++ ) {
+          ITimelineTrack track = _tracks[ trackIndex ];
+          // Construct a rectangle that contains the whole track item.
+          RectangleF boundingRectangle = RectangleHelper.Normalize( new PointF( track.Start, trackOffset ), new PointF( track.End, trackOffset + TrackHeight ) );
+          // Check if the track item is contained in the selection rectangle.
+          if( selectionRectangle.Contains( boundingRectangle ) ) {
+            // Add it to the selection.
+            _selectedTracks.Add( track );
+          }
+          trackOffset += ( TrackBorderSize * 2 ) + TrackHeight;
+        }
+      }
+
       // Reset cursor
       Cursor = Cursors.Arrow;
       // Reset selection origin.
