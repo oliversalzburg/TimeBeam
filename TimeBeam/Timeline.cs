@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 using TimeBeam.Helper;
@@ -92,12 +93,17 @@ namespace TimeBeam {
     private readonly List<ITimelineTrack> _tracks = new List<ITimelineTrack>();
 
     /// <summary>
-    ///   The currently selected track.
+    ///   The currently selected tracks.
     /// </summary>
-    private ITimelineTrack _selectedTrack = null;
+    private List<ITimelineTrack> _selectedTracks = new List<ITimelineTrack>();
     #endregion
 
     #region Interaction
+    /// <summary>
+    /// What mode is the timeline currently in?
+    /// </summary>
+    public BehaviorMode CurrentMode { get; private set; }
+
     /// <summary>
     ///   The origin from where the selected track was moved (during a dragging operation).
     /// </summary>
@@ -107,7 +113,36 @@ namespace TimeBeam {
     ///   The point at where a dragging operation started.
     /// </summary>
     private PointF _dragOrigin;
+
+    /// <summary>
+    /// The point where the user started drawing up a selection rectangle.
+    /// </summary>
+    private PointF? _selectionOrigin;
     #endregion
+
+    #region Enums
+    /// <summary>
+    /// Enumerates states the timeline can be in.
+    /// These are usually invoked through user interaction.
+    /// </summary>
+    public enum BehaviorMode {
+      /// <summary>
+      /// The timeline is idle or not using any more specific state.
+      /// </summary>
+      Idle,
+
+      /// <summary>
+      /// The user is currently in the process of selecting items on the timeline.
+      /// </summary>
+      Selecting,
+
+      /// <summary>
+      /// The user is currently moving selected items.
+      /// </summary>
+      MovingSelection
+    }
+    #endregion
+
 
     /// <summary>
     ///   Construct a new timeline.
@@ -127,6 +162,8 @@ namespace TimeBeam {
       Refresh();
     }
 
+    #region Drawing Methods
+
     /// <summary>
     ///   Redraws the timeline.
     /// </summary>
@@ -145,7 +182,7 @@ namespace TimeBeam {
         Color trackColor = colors[ trackIndex ];
         Color borderColor = Color.Black;
 
-        if( track == _selectedTrack ) {
+        if( track == _selectedTracks ) {
           borderColor = Color.WhiteSmoke;
         }
 
@@ -177,6 +214,8 @@ namespace TimeBeam {
       GraphicsContainer.Clear( BackgroundColor );
       Refresh();
     }
+
+    #endregion
 
     /// <summary>
     ///   Check if a track is located at the given position.
@@ -238,6 +277,7 @@ namespace TimeBeam {
     /// </summary>
     /// <param name="sender"></param>
     /// <param name="e"></param>
+    /// <exception cref="InvalidOperationException">Selection origin not set. This shouldn't happen.</exception>
     private void TimelineMouseMove( object sender, MouseEventArgs e ) {
       // Is the left mouse button pressed?
       if( ( e.Button & MouseButtons.Left ) != 0 ) {
@@ -246,18 +286,48 @@ namespace TimeBeam {
         // Check if there is a track at the current mouse position.
         ITimelineTrack focusedTrack = TrackHitTest( location );
 
-        if( null != focusedTrack && focusedTrack == _selectedTrack ) {
+        //if( null != focusedTrack && focusedTrack == _selectedTracks ) {
+        if( CurrentMode == BehaviorMode.MovingSelection ) {
           // Indicate ability to move though cursor.
           Cursor = Cursors.SizeWE;
           // Calculate the movement delta.
           PointF delta = PointF.Subtract( location, new SizeF( _dragOrigin ) );
-          float length = focusedTrack.End - focusedTrack.Start;
+          float length = _selectedTracks[ 0 ].End - _selectedTracks[ 0 ].Start;
           // Then apply the delta to the track
-          focusedTrack.Start = _selectedTrackOrigin + delta.X;
-          focusedTrack.End =  focusedTrack.Start + length;
+          _selectedTracks[ 0 ].Start = _selectedTrackOrigin + delta.X;
+          _selectedTracks[ 0 ].End = _selectedTracks[ 0 ].Start + length;
 
           // Force a redraw.
           Redraw();
+          Refresh();
+
+        } else if( CurrentMode == BehaviorMode.Selecting ) {
+          if( !_selectionOrigin.HasValue ) {
+            throw new InvalidOperationException( "Selection origin not set. This shouldn't happen." );
+          }
+
+          // Set the appropriate cursor for a selection action.
+          Cursor = Cursors.Cross;
+
+          // Construct the correct rectangle spanning from the selection origin to the current cursor position.
+          Rectangle selectionRectangle = new Rectangle();
+          if( location.X < _selectionOrigin.Value.X ) {
+            selectionRectangle.X = (int)location.X;
+            selectionRectangle.Width = (int)( _selectionOrigin.Value.X - selectionRectangle.X );
+          } else {
+            selectionRectangle.X = (int)_selectionOrigin.Value.X;
+            selectionRectangle.Width = (int)( location.X - selectionRectangle.X );
+          }
+          if( location.Y < _selectionOrigin.Value.Y ) {
+            selectionRectangle.Y = (int)location.Y;
+            selectionRectangle.Height = (int)( _selectionOrigin.Value.Y - selectionRectangle.Y );
+          } else {
+            selectionRectangle.Y = (int)_selectionOrigin.Value.Y;
+            selectionRectangle.Height = (int)( location.Y - selectionRectangle.Y );
+          }
+
+          Redraw();
+          GraphicsContainer.DrawRectangle( new Pen( Color.LightGray, 1 ), selectionRectangle );
           Refresh();
 
         } else {
@@ -281,14 +351,22 @@ namespace TimeBeam {
         // Tell the track that it was selected.
         focusedTrack.Selected();
         // Store a reference to the selected track
-        _selectedTrack = focusedTrack;
+        _selectedTracks.Add(  focusedTrack );
         // Store the current position of the track and the mouse position.
         // We'll use both later to move the track around.
-        _selectedTrackOrigin = _selectedTrack.Start;
+        _selectedTrackOrigin = _selectedTracks[0].Start;
         _dragOrigin = location;
 
+        CurrentMode = BehaviorMode.MovingSelection;
+
       } else {
-        _selectedTrack = null;
+        // Reset the track selection.
+        _selectedTracks.Clear();
+
+        // Remember this location as the origin for the selection.
+        _selectionOrigin = location;
+
+        CurrentMode = BehaviorMode.Selecting;
       }
 
       Redraw();
@@ -303,6 +381,13 @@ namespace TimeBeam {
     private void TimelineMouseUp( object sender, MouseEventArgs e ) {
       // Reset cursor
       Cursor = Cursors.Arrow;
+      // Reset selection origin.
+      _selectionOrigin = null;
+      // Reset mode.
+      CurrentMode = BehaviorMode.Idle;
+
+      Redraw();
+      Refresh();
     }
     #endregion
   }
