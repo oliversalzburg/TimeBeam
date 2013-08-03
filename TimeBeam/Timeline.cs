@@ -150,7 +150,7 @@ namespace TimeBeam {
         }
 
         // The extent of the track, including the border
-        RectangleF trackExtent = new RectangleF( track.Start, trackOffset, track.End, TrackHeight );
+        RectangleF trackExtent = new RectangleF( track.Start, trackOffset, track.End - track.Start, TrackHeight );
 
         // Draw the main track area.
         GraphicsContainer.FillRectangle( new SolidBrush( trackColor ), trackExtent );
@@ -251,8 +251,10 @@ namespace TimeBeam {
           Cursor = Cursors.SizeWE;
           // Calculate the movement delta.
           PointF delta = PointF.Subtract( location, new SizeF( _dragOrigin ) );
+          float length = focusedTrack.End - focusedTrack.Start;
           // Then apply the delta to the track
           focusedTrack.Start = _selectedTrackOrigin + delta.X;
+          focusedTrack.End =  focusedTrack.Start + length;
 
           // Force a redraw.
           Redraw();
