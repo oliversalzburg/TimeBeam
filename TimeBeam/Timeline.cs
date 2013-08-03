@@ -67,7 +67,7 @@ namespace TimeBeam {
     /// <summary>
     ///   The <see cref="Graphics" /> object to draw into the backbuffer.
     /// </summary>
-    protected Graphics GraphicsContainer { get; set; }
+    private Graphics GraphicsContainer { get; set; }
 
     /// <summary>
     ///   The background color of the timeline.
@@ -89,12 +89,24 @@ namespace TimeBeam {
     /// <summary>
     ///   The tracks currently placed on the timeline.
     /// </summary>
-    private List<ITimelineTrack> Tracks = new List<ITimelineTrack>();
+    private readonly List<ITimelineTrack> _tracks = new List<ITimelineTrack>();
 
     /// <summary>
     ///   The currently selected track.
     /// </summary>
-    private ITimelineTrack SelectedTrack = null;
+    private ITimelineTrack _selectedTrack = null;
+    #endregion
+
+    #region Interaction
+    /// <summary>
+    ///   The origin from where the selected track was moved (during a dragging operation).
+    /// </summary>
+    private float _selectedTrackOrigin;
+
+    /// <summary>
+    ///   The point at where a dragging operation started.
+    /// </summary>
+    private PointF _dragOrigin;
     #endregion
 
     /// <summary>
@@ -110,7 +122,7 @@ namespace TimeBeam {
     /// </summary>
     /// <param name="track">The track to add.</param>
     public void AddTrack( ITimelineTrack track ) {
-      Tracks.Add( track );
+      _tracks.Add( track );
       Redraw();
       Refresh();
     }
@@ -123,17 +135,17 @@ namespace TimeBeam {
       GraphicsContainer.Clear( BackgroundColor );
 
       // Generate colors for the tracks.
-      List<Color> colors = ColorHelper.GetRandomColors( Tracks.Count );
+      List<Color> colors = ColorHelper.GetRandomColors( _tracks.Count );
 
       int trackOffset = 0;
-      for( int trackIndex = 0; trackIndex < Tracks.Count; trackIndex++ ) {
-        ITimelineTrack track = Tracks[ trackIndex ];
+      for( int trackIndex = 0; trackIndex < _tracks.Count; trackIndex++ ) {
+        ITimelineTrack track = _tracks[ trackIndex ];
 
         // Determine colors for this track
         Color trackColor = colors[ trackIndex ];
         Color borderColor = Color.Black;
 
-        if( track == SelectedTrack ) {
+        if( track == _selectedTrack ) {
           borderColor = Color.WhiteSmoke;
         }
 
@@ -166,9 +178,16 @@ namespace TimeBeam {
       Refresh();
     }
 
+    /// <summary>
+    ///   Check if a track is located at the given position.
+    /// </summary>
+    /// <param name="test">The point to test for.</param>
+    /// <returns>
+    ///   The <see cref="ITimelineTrack" /> if there is one under the given point; <see langword="null" /> otherwise.
+    /// </returns>
     private ITimelineTrack TrackHitTest( PointF test ) {
       int trackOffset = 0;
-      foreach( ITimelineTrack track in Tracks ) {
+      foreach( ITimelineTrack track in _tracks ) {
         // The extent of the track, including the border
         RectangleF trackExtent = new RectangleF( track.Start - TrackBorderSize, trackOffset, track.End + TrackBorderSize, TrackHeight + TrackBorderSize * 2 );
 
@@ -222,9 +241,23 @@ namespace TimeBeam {
     private void TimelineMouseMove( object sender, MouseEventArgs e ) {
       // Is the left mouse button pressed?
       if( ( e.Button & MouseButtons.Left ) != 0 ) {
-        ITimelineTrack focusedTrack = TrackHitTest( new PointF( e.X, e.Y ) );
-        if( null != focusedTrack && focusedTrack == SelectedTrack ) {
-          Cursor = Cursors.SizeAll;
+        // Store the current mouse position.
+        PointF location = new PointF( e.X, e.Y );
+        // Check if there is a track at the current mouse position.
+        ITimelineTrack focusedTrack = TrackHitTest( location );
+
+        if( null != focusedTrack && focusedTrack == _selectedTrack ) {
+          // Indicate ability to move though cursor.
+          Cursor = Cursors.SizeWE;
+          // Calculate the movement delta.
+          PointF delta = PointF.Subtract( location, new SizeF( _dragOrigin ) );
+          // Then apply the delta to the track
+          focusedTrack.Start = _selectedTrackOrigin + delta.X;
+
+          // Force a redraw.
+          Redraw();
+          Refresh();
+
         } else {
           Cursor = Cursors.Arrow;
         }
@@ -237,19 +270,31 @@ namespace TimeBeam {
     /// <param name="sender"></param>
     /// <param name="e"></param>
     private void TimelineMouseDown( object sender, MouseEventArgs e ) {
-      ITimelineTrack focusedTrack = TrackHitTest( new PointF( e.X, e.Y ) );
+      // Store the current mouse position.
+      PointF location = new PointF( e.X, e.Y );
+      // Check if there is a track at the current mouse position.
+      ITimelineTrack focusedTrack = TrackHitTest( location );
+
       if( null != focusedTrack ) {
+        // Tell the track that it was selected.
         focusedTrack.Selected();
-        SelectedTrack = focusedTrack;
+        // Store a reference to the selected track
+        _selectedTrack = focusedTrack;
+        // Store the current position of the track and the mouse position.
+        // We'll use both later to move the track around.
+        _selectedTrackOrigin = _selectedTrack.Start;
+        _dragOrigin = location;
+
       } else {
-        SelectedTrack = null;
+        _selectedTrack = null;
       }
+
       Redraw();
       Refresh();
     }
 
     /// <summary>
-    /// Invoked when the user releases the mouse cursor over the control.
+    ///   Invoked when the user releases the mouse cursor over the control.
     /// </summary>
     /// <param name="sender"></param>
     /// <param name="e"></param>
