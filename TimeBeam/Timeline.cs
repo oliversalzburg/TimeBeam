@@ -310,21 +310,7 @@ namespace TimeBeam {
           Cursor = Cursors.Cross;
 
           // Construct the correct rectangle spanning from the selection origin to the current cursor position.
-          Rectangle selectionRectangle = new Rectangle();
-          if( location.X < _selectionOrigin.Value.X ) {
-            selectionRectangle.X = (int)location.X;
-            selectionRectangle.Width = (int)( _selectionOrigin.Value.X - selectionRectangle.X );
-          } else {
-            selectionRectangle.X = (int)_selectionOrigin.Value.X;
-            selectionRectangle.Width = (int)( location.X - selectionRectangle.X );
-          }
-          if( location.Y < _selectionOrigin.Value.Y ) {
-            selectionRectangle.Y = (int)location.Y;
-            selectionRectangle.Height = (int)( _selectionOrigin.Value.Y - selectionRectangle.Y );
-          } else {
-            selectionRectangle.Y = (int)_selectionOrigin.Value.Y;
-            selectionRectangle.Height = (int)( location.Y - selectionRectangle.Y );
-          }
+          Rectangle selectionRectangle = RectangleHelper.Normalize( _selectionOrigin.Value, location ).ToRectangle();
 
           Redraw();
           GraphicsContainer.DrawRectangle( new Pen( Color.LightGray, 1 ), selectionRectangle );
