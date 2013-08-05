@@ -31,6 +31,7 @@
       this.timeline1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
       this.timeline1.BackgroundColor = System.Drawing.Color.Black;
       this.timeline1.Dock = System.Windows.Forms.DockStyle.Fill;
+      this.timeline1.GridAlpha = 40;
       this.timeline1.Location = new System.Drawing.Point(0, 0);
       this.timeline1.Name = "timeline1";
       this.timeline1.Size = new System.Drawing.Size(1046, 222);
@@ -47,7 +48,7 @@
       this.Controls.Add(this.timeline1);
       this.DoubleBuffered = true;
       this.Name = "TimeBeamDemoForm";
-      this.Text = "TimeBeamDemoForm";
+      this.Text = "TimeBeam - Demo";
       this.Load += new System.EventHandler(this.TimeBeamDemoForm_Load);
       this.ResumeLayout(false);
 
