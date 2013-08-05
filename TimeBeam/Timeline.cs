@@ -227,7 +227,7 @@ namespace TimeBeam {
       }
 
       // Draw a vertical grid. Every 10 ticks, we place a line.
-      for( int x = 0; x < Width; x += 10 ) {
+      for( int x = (int)_renderingOffset.X; x < Width; x += 10 ) {
         int alpha = GridAlpha;
         // Every 60 ticks, we put a brighter line.
         if( x % 60 == 0 ) {
