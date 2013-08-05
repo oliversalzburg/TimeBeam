@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -123,6 +122,11 @@ namespace TimeBeam {
     ///   The point where the user started drawing up a selection rectangle.
     /// </summary>
     private PointF? _selectionOrigin;
+
+    /// <summary>
+    ///   The currently active edge of the tracks in focus (if any).
+    /// </summary>
+    private RectangleHelper.Edge _activeEdge = RectangleHelper.Edge.None;
     #endregion
 
     #region Enums
@@ -144,7 +148,12 @@ namespace TimeBeam {
       /// <summary>
       ///   The user is currently moving selected items.
       /// </summary>
-      MovingSelection
+      MovingSelection,
+
+      /// <summary>
+      ///   The user is resizing the selected tracks.
+      /// </summary>
+      ResizingSelection
     }
     #endregion
 
@@ -329,7 +338,6 @@ namespace TimeBeam {
 
       // Is the left mouse button pressed?
       if( ( e.Button & MouseButtons.Left ) != 0 ) {
-        //if( null != focusedTrack && focusedTrack == _selectedTracks ) {
         if( CurrentMode == BehaviorMode.MovingSelection ) {
           // Indicate ability to move though cursor.
           Cursor = Cursors.SizeWE;
@@ -343,6 +351,25 @@ namespace TimeBeam {
             // then apply the delta to that value to get the offset for the surrogate.
             selectedTrack.Start = selectedTrack.SubstituteFor.Start + delta.X;
             selectedTrack.End = selectedTrack.Start + length;
+          }
+
+          // Force a redraw.
+          RedrawAndRefresh();
+
+        } else if( CurrentMode == BehaviorMode.ResizingSelection ) {
+          // Indicate ability to resize though cursor.
+          Cursor = Cursors.SizeWE;
+
+          foreach( TrackSurrogate selectedTrack in _trackSurrogates ) {
+            // Calculate the movement delta.
+            PointF delta = PointF.Subtract( location, new SizeF( _dragOrigin ) );
+            // Apply the delta to the start or end of the timline track,
+            // depending on the edge where the user originally started the resizing operation.
+            if( ( _activeEdge & RectangleHelper.Edge.Left ) != 0 ) {
+              selectedTrack.Start = selectedTrack.SubstituteFor.Start + delta.X;
+            } else if( ( _activeEdge & RectangleHelper.Edge.Right ) != 0 ) {
+              selectedTrack.End = selectedTrack.SubstituteFor.End + delta.X;
+            }
           }
 
           // Force a redraw.
@@ -372,7 +399,7 @@ namespace TimeBeam {
         if( null != focusedTrack ) {
           RectangleF trackExtents = GetTrackExtents( focusedTrack );
           RectangleHelper.Edge isPointOnEdge = RectangleHelper.IsPointOnEdge( trackExtents, location, 3f, RectangleHelper.EdgeTest.Horizontal );
-          
+
           // Select the appropriate size cursor for the cursor position.
           // Even though we currently only support horizontal cases, we respect all possible return values here.
           switch( isPointOnEdge ) {
@@ -431,7 +458,16 @@ namespace TimeBeam {
         // Create and store surrogates for selected timeline tracks.
         _trackSurrogates = SurrogateHelper.GetSurrogates( _selectedTracks );
 
-        CurrentMode = BehaviorMode.MovingSelection;
+        // Check whether the user wants to move or resize the selected tracks.
+        RectangleF trackExtents = GetTrackExtents( focusedTrack );
+        RectangleHelper.Edge isPointOnEdge = RectangleHelper.IsPointOnEdge( trackExtents, location, 3f, RectangleHelper.EdgeTest.Horizontal );
+        if( isPointOnEdge != RectangleHelper.Edge.None ) {
+          CurrentMode = BehaviorMode.ResizingSelection;
+          _activeEdge = isPointOnEdge;
+        } else {
+          CurrentMode = BehaviorMode.MovingSelection;
+        }
+
 
       } else {
         // Reset the track selection.
@@ -475,7 +511,7 @@ namespace TimeBeam {
           trackOffset += ( TrackBorderSize * 2 ) + TrackHeight;
         }
 
-      } else if( CurrentMode == BehaviorMode.MovingSelection ) {
+      } else if( CurrentMode == BehaviorMode.MovingSelection || CurrentMode == BehaviorMode.ResizingSelection ) {
         // The moving operation ended, apply the values of the surrogates to the originals
         foreach( TrackSurrogate surrogate in _trackSurrogates ) {
           surrogate.CopyTo( surrogate.SubstituteFor );
