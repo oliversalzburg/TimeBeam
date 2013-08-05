@@ -59,6 +59,26 @@ namespace TimeBeam {
     ///   Backing field for <see cref="TrackSpacing" />.
     /// </summary>
     private int _trackSpacing = 1;
+
+    /// <summary>
+    ///   The width of the label section before the tracks.
+    /// </summary>
+    [Description( "The width of the label section before the tracks." )]
+    [Category( "Layout" )]
+    private int TrackLabelWidth {
+      get { return _trackLabelWidth; }
+      set { _trackLabelWidth = value; }
+    }
+
+    /// <summary>
+    ///   Backing field for <see cref="TrackLabelWidth" />.
+    /// </summary>
+    private int _trackLabelWidth = 100;
+
+    /// <summary>
+    /// The font to use to draw the track labels.
+    /// </summary>
+    private Font _labelFont = DefaultFont;
     #endregion
 
     #region Drawing
@@ -176,6 +196,7 @@ namespace TimeBeam {
     }
     #endregion
 
+    #region Constructor
     /// <summary>
     ///   Construct a new timeline.
     /// </summary>
@@ -183,9 +204,15 @@ namespace TimeBeam {
       InitializeComponent();
       InitializePixelMap();
 
+      // Set up the font to use to draw the track labels
+      float emHeightForLabel = EmHeightForLabel( "WM_g^~", TrackHeight );
+      _labelFont = new Font( DefaultFont.FontFamily, emHeightForLabel );
+
       // Attach mouse wheel scroll handler.
       MouseWheel += TimelineMouseWheel;
     }
+    #endregion
+
 
     /// <summary>
     ///   Add a track to the timeline.
@@ -197,13 +224,71 @@ namespace TimeBeam {
       RedrawAndRefresh();
     }
 
+    #region Helpers
     /// <summary>
-    ///   Recaclulates appropriate values for scrollbar bounds.
+    ///   Recalculates appropriate values for scrollbar bounds.
     /// </summary>
     private void RecalculateScrollbarBounds() {
       ScrollbarV.Max = _tracks.Count * ( TrackHeight + TrackSpacing );
       ScrollbarH.Max = (int)_tracks.Max( t => t.End );
     }
+
+    /// <summary>
+    ///   Calculate the rectangle within which track should be drawn.
+    /// </summary>
+    /// <returns>The rectangle within which all tracks should be drawn.</returns>
+    private Rectangle GetTrackAreaBounds() {
+      Rectangle trackArea = new Rectangle();
+
+      // Start after the track labels
+      trackArea.X = TrackLabelWidth;
+      // Start at the top (later, we'll deduct the playhead and time label height)
+      trackArea.Y = 0;
+      // Deduct scrollbar width.
+      trackArea.Width = Width - ScrollbarV.Width;
+      // Deduct scrollbar height.
+      trackArea.Height = Height - ScrollbarH.Height;
+
+      return trackArea;
+    }
+
+    /// <summary>
+    ///   Calculate the bounding rectangle for a track.
+    /// </summary>
+    /// <param name="track">The track for which to calculate the bounding rectangle.</param>
+    /// <returns>The bounding rectangle for the given track.</returns>
+    private RectangleF GetTrackExtents( ITimelineTrack track ) {
+      Rectangle trackAreaBounds = GetTrackAreaBounds();
+
+      // The index of this track (or the one it's a substitute for).
+      int trackIndex = TrackIndexForTrack( track );
+      // Offset the next track to the appropriate position.
+      int trackOffset = ( TrackHeight + TrackSpacing ) * trackIndex + (int)_renderingOffset.Y;
+
+      // The extent of the track, including the border
+      RectangleF trackExtent = new RectangleF( trackAreaBounds.X + track.Start + _renderingOffset.X, trackOffset, track.End - track.Start, TrackHeight );
+      return trackExtent;
+    }
+
+    /// <summary>
+    /// Calculate an Em-height for a font to fit within a given height.
+    /// </summary>
+    /// <param name="label">The text to use for the measurement.</param>
+    /// <param name="maxHeight">The largest height the text must fit into.</param>
+    /// <returns>An Em-height that can be used to construct a font that will fit into the given height.</returns>
+    private float EmHeightForLabel( string label, float maxHeight ) {
+      float size = DefaultFont.Size;
+      Font currentFont = new Font( DefaultFont.FontFamily, size );
+      SizeF measured = GraphicsContainer.MeasureString( label, currentFont );
+      while( measured.Height < maxHeight ) {
+        size += 1;
+        currentFont = new Font( DefaultFont.FontFamily, size );
+        measured = GraphicsContainer.MeasureString( label, currentFont );
+      }
+      return size - 1;
+    }
+    #endregion
+
 
     #region Drawing Methods
     /// <summary>
@@ -216,6 +301,9 @@ namespace TimeBeam {
       DrawBackground();
       DrawTracks( _tracks );
       DrawTracks( _trackSurrogates );
+
+      // Draw labels after the tracks to draw over elements that are partially moved out of the viewing area
+      DrawTrackLabels();
     }
 
     /// <summary>
@@ -230,9 +318,12 @@ namespace TimeBeam {
     ///   Draws the background of the control.
     /// </summary>
     private void DrawBackground() {
+
+      Rectangle trackAreaBounds = GetTrackAreaBounds();
+
       // Draw horizontal grid.
       for( int y = TrackHeight + (int)_renderingOffset.Y; y < Height; y += ( TrackHeight + TrackSpacing ) ) {
-        GraphicsContainer.DrawLine( new Pen( Color.FromArgb( GridAlpha, Color.White ) ), 0, y, Width, y );
+        GraphicsContainer.DrawLine( new Pen( Color.FromArgb( GridAlpha, Color.White ) ), trackAreaBounds.X, y, trackAreaBounds.Width, y );
       }
 
       // Draw a vertical grid. Every 10 ticks, we place a line.
@@ -244,7 +335,7 @@ namespace TimeBeam {
         if( ( x - minuteOffset ) % 60 == 0 ) {
           alpha = Math.Min( 255, alpha *= 2 );
         }
-        GraphicsContainer.DrawLine( new Pen( Color.FromArgb( alpha, Color.White ) ), x, 0, x, Height );
+        GraphicsContainer.DrawLine( new Pen( Color.FromArgb( alpha, Color.White ) ), trackAreaBounds.X + x, trackAreaBounds.Y, trackAreaBounds.X + x, trackAreaBounds.Height );
       }
     }
 
@@ -253,10 +344,22 @@ namespace TimeBeam {
     /// </summary>
     /// <param name="tracks">The tracks to draw.</param>
     private void DrawTracks( IEnumerable<ITimelineTrack> tracks ) {
+
+      Rectangle trackAreaBounds = GetTrackAreaBounds();
+
       // Generate colors for the tracks.
       List<Color> colors = ColorHelper.GetRandomColors( _tracks.Count );
 
       foreach( ITimelineTrack track in tracks ) {
+        // The extent of the track, including the border
+        RectangleF trackExtent = GetTrackExtents( track );
+        //trackExtent.Offset( trackAreaBounds.X, trackAreaBounds.Y );
+
+        // Don't draw track elements that aren't within the target area.
+        if( !trackAreaBounds.IntersectsWith( trackExtent.ToRectangle() ) ) {
+          continue;
+        }
+
         // The index of this track (or the one it's a substitute for).
         int trackIndex = TrackIndexForTrack( track );
 
@@ -267,9 +370,6 @@ namespace TimeBeam {
         if( _selectedTracks.Contains( track ) ) {
           borderColor = Color.WhiteSmoke;
         }
-
-        // The extent of the track, including the border
-        RectangleF trackExtent = GetTrackExtents( track );
 
         // Draw the main track area.
         if( track is TrackSurrogate ) {
@@ -289,6 +389,16 @@ namespace TimeBeam {
       }
     }
 
+    private void DrawTrackLabels() {
+      foreach( ITimelineTrack track in _tracks ) {
+        RectangleF trackExtents = GetTrackExtents( track );
+        RectangleF labelRect = new RectangleF( 0, trackExtents.Y, TrackLabelWidth, trackExtents.Height );
+        GraphicsContainer.FillRectangle( new SolidBrush( Color.FromArgb( 50, 50, 50 ) ), labelRect );
+        string label = "<No Name>";
+        GraphicsContainer.DrawString( label, _labelFont, Brushes.LightGray, labelRect );
+      }
+    }
+    
     /// <summary>
     ///   Retrieve the index of a given track.
     ///   If the track is a surrogate, returns the index of the track it's a substitute for.
@@ -301,22 +411,6 @@ namespace TimeBeam {
         trackToLookFor = ( (TrackSurrogate)track ).SubstituteFor;
       }
       return _tracks.IndexOf( trackToLookFor );
-    }
-
-    /// <summary>
-    ///   Calculate the bounding rectangle for a track.
-    /// </summary>
-    /// <param name="track">The track for which to calculate the bounding rectangle.</param>
-    /// <returns>The bounding rectangle for the given track.</returns>
-    private RectangleF GetTrackExtents( ITimelineTrack track ) {
-      // The index of this track (or the one it's a substitute for).
-      int trackIndex = TrackIndexForTrack( track );
-      // Offset the next track to the appropriate position.
-      int trackOffset = ( TrackHeight + TrackSpacing ) * trackIndex + (int)_renderingOffset.Y;
-
-      // The extent of the track, including the border
-      RectangleF trackExtent = new RectangleF( track.Start + _renderingOffset.X, trackOffset, track.End - track.Start, TrackHeight );
-      return trackExtent;
     }
 
     /// <summary>
@@ -554,10 +648,8 @@ namespace TimeBeam {
         int trackOffset = 0;
         for( int trackIndex = 0; trackIndex < _tracks.Count; trackIndex++ ) {
           ITimelineTrack track = _tracks[ trackIndex ];
-          // Construct a rectangle that contains the whole track item.
-          RectangleF boundingRectangle = RectangleHelper.Normalize( new PointF( track.Start, trackOffset ), new PointF( track.End, trackOffset + TrackHeight ) );
-          boundingRectangle.Offset( _renderingOffset );
-
+          RectangleF boundingRectangle = GetTrackExtents( track );
+          
           // Check if the track item is selected by the selection rectangle.
           if( SelectionHelper.IsSelected( selectionRectangle, boundingRectangle, ModifierKeys ) ) {
             // Add it to the selection.
