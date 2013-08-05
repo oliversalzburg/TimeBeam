@@ -176,8 +176,8 @@ namespace TimeBeam {
       // Clear the buffer
       GraphicsContainer.Clear( BackgroundColor );
 
-      DrawTracks( _trackSurrogates );
       DrawTracks( _tracks );
+      DrawTracks( _trackSurrogates );
     }
 
     private void RedrawAndRefresh() {
@@ -189,7 +189,7 @@ namespace TimeBeam {
     ///   Draw a list of tracks onto the timeline.
     /// </summary>
     /// <param name="tracks">The tracks to draw.</param>
-    private void DrawTracks( IList<ITimelineTrack> tracks ) {
+    private void DrawTracks( IEnumerable<ITimelineTrack> tracks ) {
       // Generate colors for the tracks.
       List<Color> colors = ColorHelper.GetRandomColors( _tracks.Count );
 
@@ -213,7 +213,7 @@ namespace TimeBeam {
         // Draw the main track area.
         if( track is TrackSurrogate ) {
           // Draw surrogates with a hatched brush.
-          GraphicsContainer.FillRectangle( new HatchBrush( HatchStyle.DiagonalCross, trackColor ), trackExtent );
+          GraphicsContainer.FillRectangle( new SolidBrush( Color.FromArgb( 128, trackColor ) ), trackExtent );
         } else {
           GraphicsContainer.FillRectangle( new SolidBrush( trackColor ), trackExtent );
         }
