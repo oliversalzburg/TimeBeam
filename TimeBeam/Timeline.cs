@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Linq;
 using System.Windows.Forms;
 using TimeBeam.Helper;
 using TimeBeam.Surrogates;
@@ -192,8 +193,16 @@ namespace TimeBeam {
     /// <param name="track">The track to add.</param>
     public void AddTrack( ITimelineTrack track ) {
       _tracks.Add( track );
-      ScrollbarV.Max = _tracks.Count * ( TrackHeight + TrackSpacing );
+      RecalculateScrollbarBounds();
       RedrawAndRefresh();
+    }
+
+    /// <summary>
+    ///   Recaclulates appropriate values for scrollbar bounds.
+    /// </summary>
+    private void RecalculateScrollbarBounds() {
+      ScrollbarV.Max = _tracks.Count * ( TrackHeight + TrackSpacing );
+      ScrollbarH.Max = (int)_tracks.Max( t => t.End );
     }
 
     #region Drawing Methods
@@ -563,6 +572,8 @@ namespace TimeBeam {
           surrogate.CopyTo( surrogate.SubstituteFor );
         }
         _trackSurrogates.Clear();
+
+        RecalculateScrollbarBounds();
       }
 
       // Reset cursor

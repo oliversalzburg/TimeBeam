@@ -46,7 +46,18 @@ namespace TimeBeam {
     /// </summary>
     [Description( "The smallest possible value of the scrollbar." )]
     [Category( "Value" )]
-    public int Min { get; set; }
+    public int Min {
+      get { return _min; }
+      set {
+        _min = value;
+        Redraw();
+      }
+    }
+
+    /// <summary>
+    ///   Backing field for <see cref="Min" />.
+    /// </summary>
+    private int _min;
 
     /// <summary>
     ///   The largest possible value of the scrollbar.
@@ -55,7 +66,10 @@ namespace TimeBeam {
     [Category( "Value" )]
     public int Max {
       get { return _max; }
-      set { _max = value; }
+      set {
+        _max = value;
+        Redraw();
+      }
     }
 
     private int _max = 100;
