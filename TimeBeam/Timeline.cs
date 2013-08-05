@@ -193,7 +193,7 @@ namespace TimeBeam {
         // The index of this track (or the one it's a substitute for).
         int trackIndex = TrackIndexForTrack( track );
         // Offset the next track to the appropriate position.
-        int trackOffset = (TrackHeight + TrackSpacing) * trackIndex + (int)_renderingOffset.Y;
+        int trackOffset = ( TrackHeight + TrackSpacing ) * trackIndex + (int)_renderingOffset.Y;
 
         // Determine colors for this track
         Color trackColor = colors[ trackIndex ];
@@ -225,15 +225,15 @@ namespace TimeBeam {
     }
 
     /// <summary>
-    /// Retrieve the index of a given track.
-    /// If the track is a surrogate, returns the index of the track it's a substitute for.
+    ///   Retrieve the index of a given track.
+    ///   If the track is a surrogate, returns the index of the track it's a substitute for.
     /// </summary>
     /// <param name="track">The track for which to retrieve the index.</param>
     /// <returns>The index of the track or the index the track is a substitute for.</returns>
     private int TrackIndexForTrack( ITimelineTrack track ) {
       ITimelineTrack trackToLookFor = track;
       if( track is TrackSurrogate ) {
-        trackToLookFor = ((TrackSurrogate)track).SubstituteFor;
+        trackToLookFor = ( (TrackSurrogate)track ).SubstituteFor;
       }
       return _tracks.IndexOf( trackToLookFor );
     }
@@ -257,17 +257,18 @@ namespace TimeBeam {
     ///   The <see cref="ITimelineTrack" /> if there is one under the given point; <see langword="null" /> otherwise.
     /// </returns>
     private ITimelineTrack TrackHitTest( PointF test ) {
-      int trackOffset = 0;
+      int trackIndex = 0;
       foreach( ITimelineTrack track in _tracks ) {
-        // The extent of the track, including the border
-        RectangleF trackExtent = new RectangleF( track.Start - TrackBorderSize, trackOffset, track.End + TrackBorderSize, TrackHeight + TrackBorderSize * 2 );
+        int trackOffset = ( TrackHeight + TrackSpacing ) * trackIndex + (int)_renderingOffset.Y;
 
+        // The extent of the track, including the border
+        RectangleF trackExtent = new RectangleF( track.Start + _renderingOffset.X, trackOffset, track.End - track.Start, TrackHeight );
+        
         if( trackExtent.Contains( test ) ) {
           return track;
         }
 
-        // Offset the next track to the appropriate position.
-        trackOffset += ( TrackBorderSize * 2 ) + TrackHeight;
+        ++trackIndex;
       }
 
       return null;
@@ -347,7 +348,10 @@ namespace TimeBeam {
           Rectangle selectionRectangle = RectangleHelper.Normalize( _selectionOrigin.Value, location ).ToRectangle();
 
           Redraw();
-          GraphicsContainer.DrawRectangle( new Pen( Color.LightGray, 1 ){DashStyle = DashStyle.Dot}, selectionRectangle );
+          GraphicsContainer.DrawRectangle(
+            new Pen( Color.LightGray, 1 ) {
+              DashStyle = DashStyle.Dot
+            }, selectionRectangle );
           Refresh();
 
         } else {
@@ -415,6 +419,8 @@ namespace TimeBeam {
           ITimelineTrack track = _tracks[ trackIndex ];
           // Construct a rectangle that contains the whole track item.
           RectangleF boundingRectangle = RectangleHelper.Normalize( new PointF( track.Start, trackOffset ), new PointF( track.End, trackOffset + TrackHeight ) );
+          boundingRectangle.Offset( _renderingOffset );
+
           // Check if the track item is selected by the selection rectangle.
           if( SelectionHelper.IsSelected( selectionRectangle, boundingRectangle, ModifierKeys ) ) {
             // Add it to the selection.
@@ -444,7 +450,7 @@ namespace TimeBeam {
 
     #region Scrolling
     /// <summary>
-    /// Invoked when the vertical scrollbar is being scrolled.
+    ///   Invoked when the vertical scrollbar is being scrolled.
     /// </summary>
     /// <param name="sender"></param>
     /// <param name="e"></param>
@@ -454,7 +460,7 @@ namespace TimeBeam {
     }
 
     /// <summary>
-    /// Invoked when the horizontal scrollbar is being scrolled.
+    ///   Invoked when the horizontal scrollbar is being scrolled.
     /// </summary>
     /// <param name="sender"></param>
     /// <param name="e"></param>
@@ -463,6 +469,5 @@ namespace TimeBeam {
       RedrawAndRefresh();
     }
     #endregion
-
   }
 }
