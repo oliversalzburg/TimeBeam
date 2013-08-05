@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using TimeBeam.Helper;
+using TimeBeam.Surrogates;
 
 namespace TimeBeam {
   /// <summary>
@@ -100,14 +101,15 @@ namespace TimeBeam {
 
     #region Interaction
     /// <summary>
-    /// What mode is the timeline currently in?
+    ///   What mode is the timeline currently in?
     /// </summary>
     public BehaviorMode CurrentMode { get; private set; }
 
     /// <summary>
-    ///   The origin from where the selected track was moved (during a dragging operation).
+    ///   The list of surrogates (stand-ins) for timeline tracks.
+    ///   These surrogates are used as temporary placeholders during certain operations.
     /// </summary>
-    private float _selectedTrackOrigin;
+    private List<ITimelineTrack> _trackSurrogates = new List<ITimelineTrack>();
 
     /// <summary>
     ///   The point at where a dragging operation started.
@@ -115,34 +117,33 @@ namespace TimeBeam {
     private PointF _dragOrigin;
 
     /// <summary>
-    /// The point where the user started drawing up a selection rectangle.
+    ///   The point where the user started drawing up a selection rectangle.
     /// </summary>
     private PointF? _selectionOrigin;
     #endregion
 
     #region Enums
     /// <summary>
-    /// Enumerates states the timeline can be in.
-    /// These are usually invoked through user interaction.
+    ///   Enumerates states the timeline can be in.
+    ///   These are usually invoked through user interaction.
     /// </summary>
     public enum BehaviorMode {
       /// <summary>
-      /// The timeline is idle or not using any more specific state.
+      ///   The timeline is idle or not using any more specific state.
       /// </summary>
       Idle,
 
       /// <summary>
-      /// The user is currently in the process of selecting items on the timeline.
+      ///   The user is currently in the process of selecting items on the timeline.
       /// </summary>
       Selecting,
 
       /// <summary>
-      /// The user is currently moving selected items.
+      ///   The user is currently moving selected items.
       /// </summary>
       MovingSelection
     }
     #endregion
-
 
     /// <summary>
     ///   Construct a new timeline.
@@ -163,7 +164,6 @@ namespace TimeBeam {
     }
 
     #region Drawing Methods
-
     /// <summary>
     ///   Redraws the timeline.
     /// </summary>
@@ -171,12 +171,21 @@ namespace TimeBeam {
       // Clear the buffer
       GraphicsContainer.Clear( BackgroundColor );
 
+      DrawTracks( _trackSurrogates );
+      DrawTracks( _tracks );
+    }
+
+    /// <summary>
+    ///   Draw a list of tracks onto the timeline.
+    /// </summary>
+    /// <param name="tracks">The tracks to draw.</param>
+    private void DrawTracks( IList<ITimelineTrack> tracks ) {
       // Generate colors for the tracks.
       List<Color> colors = ColorHelper.GetRandomColors( _tracks.Count );
 
       int trackOffset = 0;
-      for( int trackIndex = 0; trackIndex < _tracks.Count; trackIndex++ ) {
-        ITimelineTrack track = _tracks[ trackIndex ];
+      for( int trackIndex = 0; trackIndex < tracks.Count; trackIndex++ ) {
+        ITimelineTrack track = tracks[ trackIndex ];
 
         // Determine colors for this track
         Color trackColor = colors[ trackIndex ];
@@ -190,7 +199,12 @@ namespace TimeBeam {
         RectangleF trackExtent = new RectangleF( track.Start, trackOffset, track.End - track.Start, TrackHeight );
 
         // Draw the main track area.
-        GraphicsContainer.FillRectangle( new SolidBrush( trackColor ), trackExtent );
+        if( track is TrackSurrogate ) {
+          // Draw surrogates with a hatched brush.
+          GraphicsContainer.FillRectangle( new HatchBrush( HatchStyle.DiagonalCross, trackColor ), trackExtent );
+        } else {
+          GraphicsContainer.FillRectangle( new SolidBrush( trackColor ), trackExtent );
+        }
 
         // Compensate for border size
         trackExtent.X += TrackBorderSize / 2f;
@@ -214,7 +228,6 @@ namespace TimeBeam {
       GraphicsContainer.Clear( BackgroundColor );
       Refresh();
     }
-
     #endregion
 
     /// <summary>
@@ -290,12 +303,17 @@ namespace TimeBeam {
         if( CurrentMode == BehaviorMode.MovingSelection ) {
           // Indicate ability to move though cursor.
           Cursor = Cursors.SizeWE;
-          // Calculate the movement delta.
-          PointF delta = PointF.Subtract( location, new SizeF( _dragOrigin ) );
-          float length = _selectedTracks[ 0 ].End - _selectedTracks[ 0 ].Start;
-          // Then apply the delta to the track
-          _selectedTracks[ 0 ].Start = _selectedTrackOrigin + delta.X;
-          _selectedTracks[ 0 ].End = _selectedTracks[ 0 ].Start + length;
+
+          foreach( TrackSurrogate selectedTrack in _trackSurrogates ) {
+            // Calculate the movement delta.
+            PointF delta = PointF.Subtract( location, new SizeF( _dragOrigin ) );
+            float length = selectedTrack.End - selectedTrack.Start;
+            // Then apply the delta to the track.
+            // For that, we first get the original position from the original (non-surrogate) item and
+            // then apply the delta to that value to get the offset for the surrogate.
+            selectedTrack.Start = selectedTrack.SubstituteFor.Start + delta.X;
+            selectedTrack.End = selectedTrack.Start + length;
+          }
 
           // Force a redraw.
           Redraw();
@@ -334,15 +352,18 @@ namespace TimeBeam {
       ITimelineTrack focusedTrack = TrackHitTest( location );
 
       if( null != focusedTrack ) {
-        // Tell the track that it was selected.
-        focusedTrack.Selected();
-        // Store a reference to the selected track
-        _selectedTracks.Clear();
-        _selectedTracks.Add(  focusedTrack );
-        // Store the current position of the track and the mouse position.
-        // We'll use both later to move the track around.
-        _selectedTrackOrigin = _selectedTracks[0].Start;
+        // Was this track already selected?
+        if( !_selectedTracks.Contains( focusedTrack ) ) {
+          // Tell the track that it was selected.
+          focusedTrack.Selected();
+          // Store a reference to the selected track
+          _selectedTracks.Clear();
+          _selectedTracks.Add( focusedTrack );
+        }
+        // Store the current mouse position. It'll be used later to calculate the movement delta.
         _dragOrigin = location;
+        // Create and store surrogates for selected timeline tracks.
+        _trackSurrogates = SurrogateHelper.GetSurrogates( _selectedTracks );
 
         CurrentMode = BehaviorMode.MovingSelection;
 
@@ -386,6 +407,13 @@ namespace TimeBeam {
           }
           trackOffset += ( TrackBorderSize * 2 ) + TrackHeight;
         }
+
+      } else if( CurrentMode == BehaviorMode.MovingSelection ) {
+        // The moving operation ended, apply the values of the surrogates to the originals
+        foreach( TrackSurrogate surrogate in _trackSurrogates ) {
+          surrogate.CopyTo( surrogate.SubstituteFor );
+        }
+        _trackSurrogates.Clear();
       }
 
       // Reset cursor
