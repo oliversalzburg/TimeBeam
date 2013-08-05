@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="TestObjects\AdjustMyLength.cs" />
+    <Compile Include="TimeBeamClock.cs" />
     <Compile Include="TimeBeamDemoForm.cs">
       <SubType>Form</SubType>
     </Compile>

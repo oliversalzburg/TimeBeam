@@ -23,13 +23,20 @@
     /// the contents of this method with the code editor.
     /// </summary>
     private void InitializeComponent() {
+      this.components = new System.ComponentModel.Container();
+      this.timer1 = new System.Windows.Forms.Timer(this.components);
       this.timeline1 = new TimeBeam.Timeline();
       this.SuspendLayout();
+      // 
+      // timer1
+      // 
+      this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
       // 
       // timeline1
       // 
       this.timeline1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
       this.timeline1.BackgroundColor = System.Drawing.Color.Black;
+      this.timeline1.Clock = null;
       this.timeline1.Dock = System.Windows.Forms.DockStyle.Fill;
       this.timeline1.GridAlpha = 40;
       this.timeline1.Location = new System.Drawing.Point(0, 0);
@@ -47,9 +54,11 @@
       this.ClientSize = new System.Drawing.Size(1046, 222);
       this.Controls.Add(this.timeline1);
       this.DoubleBuffered = true;
+      this.KeyPreview = true;
       this.Name = "TimeBeamDemoForm";
       this.Text = "TimeBeam - Demo";
       this.Load += new System.EventHandler(this.TimeBeamDemoForm_Load);
+      this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.TimeBeamDemoForm_KeyUp);
       this.ResumeLayout(false);
 
     }
@@ -57,6 +66,7 @@
     #endregion
 
     private TimeBeam.Timeline timeline1;
+    private System.Windows.Forms.Timer timer1;
 
 
   }

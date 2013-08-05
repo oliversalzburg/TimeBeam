@@ -2,14 +2,19 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using TimeBeam.Timing;
 using TimeBeamTest.TestObjects;
 
 namespace TimeBeamTest {
   public partial class TimeBeamDemoForm : Form {
+
+    private TimeBeamClock _clock = new TimeBeamClock();
+
     public TimeBeamDemoForm() {
       InitializeComponent();
     }
@@ -28,6 +33,29 @@ namespace TimeBeamTest {
 
       foreach( AdjustMyLength track in tracks ) {
         timeline1.AddTrack( track );
+      }
+
+      // Register the clock with the timeline
+      timeline1.Clock = _clock;
+      // Activate the timer that invokes the clock to update.
+      timer1.Enabled = true;
+    }
+
+    private void timer1_Tick( object sender, EventArgs e ) {
+      _clock.Update();
+      timeline1.Tick();
+      timeline1.Refresh();
+    }
+
+    private void TimeBeamDemoForm_KeyUp( object sender, KeyEventArgs e ) {
+      if( e.KeyCode == Keys.Space ) {
+        if( _clock.IsRunning ) {
+          _clock.Pause();
+          Debug.WriteLine( "Clock paused." );
+        } else {
+          _clock.Play();
+          Debug.WriteLine( "Clock running." );
+        }
       }
     }
   }

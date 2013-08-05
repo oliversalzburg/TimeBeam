@@ -7,6 +7,7 @@ using System.Linq;
 using System.Windows.Forms;
 using TimeBeam.Helper;
 using TimeBeam.Surrogates;
+using TimeBeam.Timing;
 
 namespace TimeBeam {
   /// <summary>
@@ -168,6 +169,13 @@ namespace TimeBeam {
     private RectangleHelper.Edge _activeEdge = RectangleHelper.Edge.None;
     #endregion
 
+    #region Timing
+    /// <summary>
+    ///   The clock to use as the timing source.
+    /// </summary>
+    public IClock Clock { get; set; }
+    #endregion
+
     #region Enums
     /// <summary>
     ///   Enumerates states the timeline can be in.
@@ -221,6 +229,15 @@ namespace TimeBeam {
       _tracks.Add( track );
       RecalculateScrollbarBounds();
       RedrawAndRefresh();
+    }
+
+    /// <summary>
+    ///   Invoked when the external clock is updated.
+    /// </summary>
+    public void Tick() {
+      if( Clock.IsRunning ) {
+        Redraw();
+      }
     }
 
     #region Helpers
@@ -319,6 +336,7 @@ namespace TimeBeam {
       DrawBackground();
       DrawTracks( _tracks );
       DrawTracks( _trackSurrogates );
+      DrawPlayhead();
 
       // Draw labels after the tracks to draw over elements that are partially moved out of the viewing area
       DrawTrackLabels();
@@ -416,6 +434,26 @@ namespace TimeBeam {
         RectangleF labelRect = new RectangleF( 0, trackExtents.Y, TrackLabelWidth, trackExtents.Height );
         GraphicsContainer.FillRectangle( new SolidBrush( Color.FromArgb( 50, 50, 50 ) ), labelRect );
         GraphicsContainer.DrawString( track.Name, _labelFont, Brushes.LightGray, labelRect );
+      }
+    }
+
+    /// <summary>
+    ///   Draw a playhead on the timeline.
+    ///   The playhead indicates a time value.
+    /// </summary>
+    private void DrawPlayhead() {
+      // Only draw a playhead if we have a clock set.
+      if( null != Clock ) {
+        // Calculate the position of the playhead.
+        Rectangle trackAreaBounds = GetTrackAreaBounds();
+        float playheadOffset = (float)( trackAreaBounds.X + ( Clock.Value * 0.001f ) ) + _renderingOffset.X;
+        // Don't draw when not in view.
+        if( playheadOffset < trackAreaBounds.X || playheadOffset > trackAreaBounds.X + trackAreaBounds.Width ) {
+          return;
+        }
+
+        // Draw the playhead as a single line.
+        GraphicsContainer.DrawLine( Pens.SpringGreen, playheadOffset, trackAreaBounds.Y, playheadOffset, trackAreaBounds.Height );
       }
     }
 
