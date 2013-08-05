@@ -294,6 +294,11 @@ namespace TimeBeam {
       return _tracks.IndexOf( trackToLookFor );
     }
 
+    /// <summary>
+    ///   Calculate the bounding rectangle for a track.
+    /// </summary>
+    /// <param name="track">The track for which to calculate the bounding rectangle.</param>
+    /// <returns>The bounding rectangle for the given track.</returns>
     private RectangleF GetTrackExtents( ITimelineTrack track ) {
       // The index of this track (or the one it's a substitute for).
       int trackIndex = TrackIndexForTrack( track );
@@ -324,7 +329,6 @@ namespace TimeBeam {
     ///   The <see cref="ITimelineTrack" /> if there is one under the given point; <see langword="null" /> otherwise.
     /// </returns>
     private ITimelineTrack TrackHitTest( PointF test ) {
-      int trackIndex = 0;
       foreach( ITimelineTrack track in _tracks ) {
         // The extent of the track, including the border
         RectangleF trackExtent = GetTrackExtents( track );
@@ -332,8 +336,6 @@ namespace TimeBeam {
         if( trackExtent.Contains( test ) ) {
           return track;
         }
-
-        ++trackIndex;
       }
 
       return null;
