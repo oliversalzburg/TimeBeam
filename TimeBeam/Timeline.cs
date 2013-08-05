@@ -96,7 +96,7 @@ namespace TimeBeam {
     /// <summary>
     ///   The currently selected tracks.
     /// </summary>
-    private List<ITimelineTrack> _selectedTracks = new List<ITimelineTrack>();
+    private readonly List<ITimelineTrack> _selectedTracks = new List<ITimelineTrack>();
     #endregion
 
     #region Interaction
