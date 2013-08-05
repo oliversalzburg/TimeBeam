@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -196,8 +197,6 @@ namespace TimeBeam {
       foreach( ITimelineTrack track in tracks ) {
         // The index of this track (or the one it's a substitute for).
         int trackIndex = TrackIndexForTrack( track );
-        // Offset the next track to the appropriate position.
-        int trackOffset = ( TrackHeight + TrackSpacing ) * trackIndex + (int)_renderingOffset.Y;
 
         // Determine colors for this track
         Color trackColor = colors[ trackIndex ];
@@ -208,7 +207,7 @@ namespace TimeBeam {
         }
 
         // The extent of the track, including the border
-        RectangleF trackExtent = new RectangleF( track.Start + _renderingOffset.X, trackOffset, track.End - track.Start, TrackHeight );
+        RectangleF trackExtent = GetTrackExtents( track );
 
         // Draw the main track area.
         if( track is TrackSurrogate ) {
@@ -242,6 +241,17 @@ namespace TimeBeam {
       return _tracks.IndexOf( trackToLookFor );
     }
 
+    private RectangleF GetTrackExtents( ITimelineTrack track ) {
+      // The index of this track (or the one it's a substitute for).
+      int trackIndex = TrackIndexForTrack( track );
+      // Offset the next track to the appropriate position.
+      int trackOffset = ( TrackHeight + TrackSpacing ) * trackIndex + (int)_renderingOffset.Y;
+
+      // The extent of the track, including the border
+      RectangleF trackExtent = new RectangleF( track.Start + _renderingOffset.X, trackOffset, track.End - track.Start, TrackHeight );
+      return trackExtent;
+    }
+
     /// <summary>
     ///   Initialize the backbuffer
     /// </summary>
@@ -263,11 +273,9 @@ namespace TimeBeam {
     private ITimelineTrack TrackHitTest( PointF test ) {
       int trackIndex = 0;
       foreach( ITimelineTrack track in _tracks ) {
-        int trackOffset = ( TrackHeight + TrackSpacing ) * trackIndex + (int)_renderingOffset.Y;
-
         // The extent of the track, including the border
-        RectangleF trackExtent = new RectangleF( track.Start + _renderingOffset.X, trackOffset, track.End - track.Start, TrackHeight );
-        
+        RectangleF trackExtent = GetTrackExtents( track );
+
         if( trackExtent.Contains( test ) ) {
           return track;
         }
@@ -314,13 +322,13 @@ namespace TimeBeam {
     /// <param name="e"></param>
     /// <exception cref="InvalidOperationException">Selection origin not set. This shouldn't happen.</exception>
     private void TimelineMouseMove( object sender, MouseEventArgs e ) {
+      // Store the current mouse position.
+      PointF location = new PointF( e.X, e.Y );
+      // Check if there is a track at the current mouse position.
+      ITimelineTrack focusedTrack = TrackHitTest( location );
+
       // Is the left mouse button pressed?
       if( ( e.Button & MouseButtons.Left ) != 0 ) {
-        // Store the current mouse position.
-        PointF location = new PointF( e.X, e.Y );
-        // Check if there is a track at the current mouse position.
-        ITimelineTrack focusedTrack = TrackHitTest( location );
-
         //if( null != focusedTrack && focusedTrack == _selectedTracks ) {
         if( CurrentMode == BehaviorMode.MovingSelection ) {
           // Indicate ability to move though cursor.
@@ -357,6 +365,40 @@ namespace TimeBeam {
               DashStyle = DashStyle.Dot
             }, selectionRectangle );
           Refresh();
+        }
+
+      } else {
+        // No mouse button is being pressed
+        if( null != focusedTrack ) {
+          RectangleF trackExtents = GetTrackExtents( focusedTrack );
+          RectangleHelper.Edge isPointOnEdge = RectangleHelper.IsPointOnEdge( trackExtents, location, 3f, RectangleHelper.EdgeTest.Horizontal );
+          
+          // Select the appropriate size cursor for the cursor position.
+          // Even though we currently only support horizontal cases, we respect all possible return values here.
+          switch( isPointOnEdge ) {
+            case RectangleHelper.Edge.Top:
+            case RectangleHelper.Edge.Bottom:
+              Cursor = Cursors.SizeNS;
+              break;
+            case RectangleHelper.Edge.Right:
+            case RectangleHelper.Edge.Left:
+              Cursor = Cursors.SizeWE;
+              break;
+            case RectangleHelper.Edge.Top | RectangleHelper.Edge.Left:
+            case RectangleHelper.Edge.Bottom | RectangleHelper.Edge.Right:
+              Cursor = Cursors.SizeNWSE;
+              break;
+            case RectangleHelper.Edge.Top | RectangleHelper.Edge.Right:
+            case RectangleHelper.Edge.Bottom | RectangleHelper.Edge.Left:
+              Cursor = Cursors.SizeNESW;
+              break;
+            case RectangleHelper.Edge.None:
+              Cursor = Cursors.Arrow;
+              break;
+            default:
+              Cursor = Cursors.Arrow;
+              break;
+          }
 
         } else {
           Cursor = Cursors.Arrow;
@@ -474,11 +516,11 @@ namespace TimeBeam {
     }
 
     /// <summary>
-    /// Invoked when the user scrolls the mouse wheel.
+    ///   Invoked when the user scrolls the mouse wheel.
     /// </summary>
     /// <param name="sender"></param>
     /// <param name="e"></param>
-    void TimelineMouseWheel( object sender, MouseEventArgs e ) {
+    private void TimelineMouseWheel( object sender, MouseEventArgs e ) {
       ScrollbarV.Value -= e.Delta / 10;
     }
     #endregion
