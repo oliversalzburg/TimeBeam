@@ -12,6 +12,7 @@
     protected override void Dispose( bool disposing ) {
       if( disposing && ( components != null ) ) {
         components.Dispose();
+        ForegroundBrush.Dispose();
       }
       base.Dispose( disposing );
     }
@@ -31,7 +32,7 @@
       this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
       this.DoubleBuffered = true;
       this.Name = "AbstractScrollbar";
-      this.Size = new System.Drawing.Size(284, 51);
+      this.Size = new System.Drawing.Size(100, 100);
       this.Paint += new System.Windows.Forms.PaintEventHandler(this.AbstractScrollbarPaint);
       this.Resize += new System.EventHandler(this.AbstractScrollbarResize);
       this.ResumeLayout(false);
