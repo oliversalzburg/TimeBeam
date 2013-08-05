@@ -85,6 +85,8 @@ namespace TimeBeam {
     ///   Backing field for <see cref="BackgroundColor" />.
     /// </summary>
     private Color _backgroundColor = Color.Black;
+
+    private PointF _renderingOffset = PointF.Empty;
     #endregion
 
     #region Tracks
@@ -159,8 +161,7 @@ namespace TimeBeam {
     /// <param name="track">The track to add.</param>
     public void AddTrack( ITimelineTrack track ) {
       _tracks.Add( track );
-      Redraw();
-      Refresh();
+      RedrawAndRefresh();
     }
 
     #region Drawing Methods
@@ -175,6 +176,11 @@ namespace TimeBeam {
       DrawTracks( _tracks );
     }
 
+    private void RedrawAndRefresh() {
+      Redraw();
+      Refresh();
+    }
+
     /// <summary>
     ///   Draw a list of tracks onto the timeline.
     /// </summary>
@@ -187,7 +193,7 @@ namespace TimeBeam {
         // The index of this track (or the one it's a substitute for).
         int trackIndex = TrackIndexForTrack( track );
         // Offset the next track to the appropriate position.
-        int trackOffset = (TrackHeight + TrackSpacing) * trackIndex;
+        int trackOffset = (TrackHeight + TrackSpacing) * trackIndex + (int)_renderingOffset.Y;
 
         // Determine colors for this track
         Color trackColor = colors[ trackIndex ];
@@ -198,7 +204,7 @@ namespace TimeBeam {
         }
 
         // The extent of the track, including the border
-        RectangleF trackExtent = new RectangleF( track.Start, trackOffset, track.End - track.Start, TrackHeight );
+        RectangleF trackExtent = new RectangleF( track.Start + _renderingOffset.X, trackOffset, track.End - track.Start, TrackHeight );
 
         // Draw the main track area.
         if( track is TrackSurrogate ) {
@@ -275,8 +281,7 @@ namespace TimeBeam {
     /// <param name="e"></param>
     private void TimelineResize( object sender, EventArgs e ) {
       InitializePixelMap();
-      Redraw();
-      Refresh();
+      RedrawAndRefresh();
     }
 
     /// <summary>
@@ -294,8 +299,7 @@ namespace TimeBeam {
     /// <param name="sender"></param>
     /// <param name="e"></param>
     private void TimelineLoad( object sender, EventArgs e ) {
-      Redraw();
-      Refresh();
+      RedrawAndRefresh();
     }
 
     /// <summary>
@@ -329,8 +333,7 @@ namespace TimeBeam {
           }
 
           // Force a redraw.
-          Redraw();
-          Refresh();
+          RedrawAndRefresh();
 
         } else if( CurrentMode == BehaviorMode.Selecting ) {
           if( !_selectionOrigin.HasValue ) {
@@ -390,8 +393,7 @@ namespace TimeBeam {
         CurrentMode = BehaviorMode.Selecting;
       }
 
-      Redraw();
-      Refresh();
+      RedrawAndRefresh();
     }
 
     /// <summary>
@@ -436,9 +438,31 @@ namespace TimeBeam {
       // Reset mode.
       CurrentMode = BehaviorMode.Idle;
 
-      Redraw();
-      Refresh();
+      RedrawAndRefresh();
     }
     #endregion
+
+    #region Scrolling
+    /// <summary>
+    /// Invoked when the vertical scrollbar is being scrolled.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private void ScrollbarVScroll( object sender, ScrollEventArgs e ) {
+      _renderingOffset.Y = -e.NewValue;
+      RedrawAndRefresh();
+    }
+
+    /// <summary>
+    /// Invoked when the horizontal scrollbar is being scrolled.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private void ScrollbarHScroll( object sender, ScrollEventArgs e ) {
+      _renderingOffset.X = -e.NewValue;
+      RedrawAndRefresh();
+    }
+    #endregion
+
   }
 }

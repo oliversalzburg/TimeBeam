@@ -9,7 +9,7 @@ namespace TimeBeam {
   /// </summary>
   public partial class AbstractScrollbar : UserControl {
     /// <summary>
-    /// Thumb will always be at least this wide/high.
+    ///   Thumb will always be at least this wide/high.
     /// </summary>
     public const int MinThumbExtent = 10;
 
@@ -112,6 +112,21 @@ namespace TimeBeam {
     /// </summary>
     /// <see cref="ScrollDeltaOrigin" />
     protected int ScrollOrigin;
+
+    /// <summary>
+    ///   Invoked when the scrollbar is being scrolled.
+    /// </summary>
+    public new event EventHandler<ScrollEventArgs> Scroll;
+
+    /// <summary>
+    /// Invoked the <see cref="Scroll"/> event.
+    /// </summary>
+    /// <param name="eventArgs">The arguments to pass with the event.</param>
+    protected void InvokeScrollEvent( ScrollEventArgs eventArgs ) {
+      if( null != Scroll ) {
+        Scroll( this, eventArgs );
+      }
+    }
     #endregion
 
     /// <summary>

@@ -1,4 +1,7 @@
-﻿namespace TimeBeam {
+﻿using System;
+using System.Windows.Forms;
+
+namespace TimeBeam {
   partial class Timeline {
     /// <summary> 
     /// Required designer variable.
@@ -23,45 +26,47 @@
     /// the contents of this method with the code editor.
     /// </summary>
     private void InitializeComponent() {
-      this.verticalScrollbar1 = new TimeBeam.Scrollbar.VerticalScrollbar();
-      this.horizontalScrollbar1 = new TimeBeam.Scrollbar.HorizontalScrollbar();
+      this.ScrollbarV = new TimeBeam.Scrollbar.VerticalScrollbar();
+      this.ScrollbarH = new TimeBeam.Scrollbar.HorizontalScrollbar();
       this.SuspendLayout();
       // 
-      // verticalScrollbar1
+      // ScrollbarV
       // 
-      this.verticalScrollbar1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+      this.ScrollbarV.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-      this.verticalScrollbar1.BackgroundColor = System.Drawing.Color.Black;
-      this.verticalScrollbar1.ForegroundColor = System.Drawing.Color.Gray;
-      this.verticalScrollbar1.Location = new System.Drawing.Point(781, 0);
-      this.verticalScrollbar1.Max = 100;
-      this.verticalScrollbar1.Min = 0;
-      this.verticalScrollbar1.Name = "verticalScrollbar1";
-      this.verticalScrollbar1.Size = new System.Drawing.Size(20, 180);
-      this.verticalScrollbar1.TabIndex = 1;
-      this.verticalScrollbar1.Value = 0;
+      this.ScrollbarV.BackgroundColor = System.Drawing.Color.Black;
+      this.ScrollbarV.ForegroundColor = System.Drawing.Color.Gray;
+      this.ScrollbarV.Location = new System.Drawing.Point(781, 0);
+      this.ScrollbarV.Max = 100;
+      this.ScrollbarV.Min = 0;
+      this.ScrollbarV.Name = "ScrollbarV";
+      this.ScrollbarV.Size = new System.Drawing.Size(20, 180);
+      this.ScrollbarV.TabIndex = 1;
+      this.ScrollbarV.Value = 0;
+      this.ScrollbarV.Scroll += new System.EventHandler<System.Windows.Forms.ScrollEventArgs>(this.ScrollbarVScroll);
       // 
-      // horizontalScrollbar1
+      // ScrollbarH
       // 
-      this.horizontalScrollbar1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+      this.ScrollbarH.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-      this.horizontalScrollbar1.BackgroundColor = System.Drawing.Color.Black;
-      this.horizontalScrollbar1.ForegroundColor = System.Drawing.Color.Gray;
-      this.horizontalScrollbar1.Location = new System.Drawing.Point(0, 180);
-      this.horizontalScrollbar1.Max = 100;
-      this.horizontalScrollbar1.Min = 0;
-      this.horizontalScrollbar1.Name = "horizontalScrollbar1";
-      this.horizontalScrollbar1.Size = new System.Drawing.Size(780, 20);
-      this.horizontalScrollbar1.TabIndex = 0;
-      this.horizontalScrollbar1.Value = 0;
+      this.ScrollbarH.BackgroundColor = System.Drawing.Color.Black;
+      this.ScrollbarH.ForegroundColor = System.Drawing.Color.Gray;
+      this.ScrollbarH.Location = new System.Drawing.Point(0, 180);
+      this.ScrollbarH.Max = 100;
+      this.ScrollbarH.Min = 0;
+      this.ScrollbarH.Name = "ScrollbarH";
+      this.ScrollbarH.Size = new System.Drawing.Size(780, 20);
+      this.ScrollbarH.TabIndex = 0;
+      this.ScrollbarH.Value = 0;
+      this.ScrollbarH.Scroll += new System.EventHandler<System.Windows.Forms.ScrollEventArgs>(this.ScrollbarHScroll);
       // 
       // Timeline
       // 
       this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
       this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
       this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
-      this.Controls.Add(this.verticalScrollbar1);
-      this.Controls.Add(this.horizontalScrollbar1);
+      this.Controls.Add(this.ScrollbarV);
+      this.Controls.Add(this.ScrollbarH);
       this.DoubleBuffered = true;
       this.Name = "Timeline";
       this.Size = new System.Drawing.Size(800, 200);
@@ -77,7 +82,7 @@
 
     #endregion
 
-    private Scrollbar.HorizontalScrollbar horizontalScrollbar1;
-    private Scrollbar.VerticalScrollbar verticalScrollbar1;
+    private Scrollbar.HorizontalScrollbar ScrollbarH;
+    private Scrollbar.VerticalScrollbar ScrollbarV;
   }
 }

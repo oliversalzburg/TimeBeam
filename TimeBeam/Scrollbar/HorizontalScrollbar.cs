@@ -114,7 +114,9 @@ namespace TimeBeam.Scrollbar {
     private void HorizontalScrollbarMouseMove( object sender, MouseEventArgs e ) {
       if( ( e.Button & MouseButtons.Left ) != 0 ) {
         int delta = e.X - ScrollDeltaOrigin;
+        int oldValue = Value;
         Value = PositionToValue( ScrollOrigin + delta );
+        InvokeScrollEvent( new ScrollEventArgs( ScrollEventType.ThumbTrack, oldValue, Value, ScrollOrientation.HorizontalScroll ) );
         Redraw();
         Refresh();
       }
