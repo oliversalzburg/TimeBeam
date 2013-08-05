@@ -347,7 +347,7 @@ namespace TimeBeam {
           Rectangle selectionRectangle = RectangleHelper.Normalize( _selectionOrigin.Value, location ).ToRectangle();
 
           Redraw();
-          GraphicsContainer.DrawRectangle( new Pen( Color.LightGray, 1 ), selectionRectangle );
+          GraphicsContainer.DrawRectangle( new Pen( Color.LightGray, 1 ){DashStyle = DashStyle.Dot}, selectionRectangle );
           Refresh();
 
         } else {
