@@ -209,7 +209,7 @@ namespace TimeBeam {
 
         // Determine colors for this track
         Color trackColor = colors[ trackIndex ];
-        Color borderColor = Color.Black;
+        Color borderColor = Color.FromArgb( 128, Color.Black );
 
         if( _selectedTracks.Contains( track ) ) {
           borderColor = Color.WhiteSmoke;
