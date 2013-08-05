@@ -161,7 +161,12 @@ namespace TimeBeam {
     /// <summary>
     ///   The point where the user started drawing up a selection rectangle.
     /// </summary>
-    private PointF? _selectionOrigin;
+    private PointF _selectionOrigin;
+
+    /// <summary>
+    ///   The current selection rectangle.
+    /// </summary>
+    private RectangleF _selectionRectangle = RectangleF.Empty;
 
     /// <summary>
     ///   The currently active edge of the tracks in focus (if any).
@@ -337,6 +342,7 @@ namespace TimeBeam {
       DrawTracks( _tracks );
       DrawTracks( _trackSurrogates );
       DrawPlayhead();
+      DrawSelectionRectangle();
 
       // Draw labels after the tracks to draw over elements that are partially moved out of the viewing area
       DrawTrackLabels();
@@ -458,6 +464,16 @@ namespace TimeBeam {
     }
 
     /// <summary>
+    ///   Draws the selection rectangle the user is drawing.
+    /// </summary>
+    private void DrawSelectionRectangle() {
+      GraphicsContainer.DrawRectangle(
+        new Pen( Color.LightGray, 1 ) {
+          DashStyle = DashStyle.Dot
+        }, _selectionRectangle.ToRectangle() );
+    }
+
+    /// <summary>
     ///   Retrieve the index of a given track.
     ///   If the track is a surrogate, returns the index of the track it's a substitute for.
     /// </summary>
@@ -563,7 +579,7 @@ namespace TimeBeam {
           RedrawAndRefresh();
 
         } else if( CurrentMode == BehaviorMode.Selecting ) {
-          if( !_selectionOrigin.HasValue ) {
+          if( _selectionOrigin == PointF.Empty ) {
             throw new InvalidOperationException( "Selection origin not set. This shouldn't happen." );
           }
 
@@ -571,14 +587,9 @@ namespace TimeBeam {
           Cursor = Cursors.Cross;
 
           // Construct the correct rectangle spanning from the selection origin to the current cursor position.
-          Rectangle selectionRectangle = RectangleHelper.Normalize( _selectionOrigin.Value, location ).ToRectangle();
+          _selectionRectangle = RectangleHelper.Normalize( _selectionOrigin, location ).ToRectangle();
 
-          Redraw();
-          GraphicsContainer.DrawRectangle(
-            new Pen( Color.LightGray, 1 ) {
-              DashStyle = DashStyle.Dot
-            }, selectionRectangle );
-          Refresh();
+          RedrawAndRefresh();
         }
 
       } else {
@@ -681,7 +692,7 @@ namespace TimeBeam {
       if( CurrentMode == BehaviorMode.Selecting ) {
         // If we were selecting, it's now time to finalize the selection
         // Construct the correct rectangle spanning from the selection origin to the current cursor position.
-        RectangleF selectionRectangle = RectangleHelper.Normalize( _selectionOrigin.Value, location );
+        RectangleF selectionRectangle = RectangleHelper.Normalize( _selectionOrigin, location );
 
         int trackOffset = 0;
         for( int trackIndex = 0; trackIndex < _tracks.Count; trackIndex++ ) {
@@ -709,7 +720,9 @@ namespace TimeBeam {
       // Reset cursor
       Cursor = Cursors.Arrow;
       // Reset selection origin.
-      _selectionOrigin = null;
+      _selectionOrigin = PointF.Empty;
+      // And the selection rectangle itself.
+      _selectionRectangle = RectangleF.Empty;
       // Reset mode.
       CurrentMode = BehaviorMode.Idle;
 
