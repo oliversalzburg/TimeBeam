@@ -227,10 +227,12 @@ namespace TimeBeam {
       }
 
       // Draw a vertical grid. Every 10 ticks, we place a line.
-      for( int x = (int)_renderingOffset.X; x < Width; x += 10 ) {
+      int tickOffset = (int)_renderingOffset.X % 10;
+      int minuteOffset = (int)_renderingOffset.X % 60;
+      for( int x = tickOffset; x < Width; x += 10 ) {
         int alpha = GridAlpha;
-        // Every 60 ticks, we put a brighter line.
-        if( x % 60 == 0 ) {
+        // Every 60 ticks, we put a brighter, thicker line.
+        if( ( x - minuteOffset ) % 60 == 0 ) {
           alpha = Math.Min( 255, alpha *= 2 );
         }
         GraphicsContainer.DrawLine( new Pen( Color.FromArgb( alpha, Color.White ) ), x, 0, x, Height );
