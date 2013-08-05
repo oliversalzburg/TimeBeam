@@ -76,7 +76,7 @@ namespace TimeBeam {
     private int _trackLabelWidth = 100;
 
     /// <summary>
-    /// The font to use to draw the track labels.
+    ///   The font to use to draw the track labels.
     /// </summary>
     private Font _labelFont = DefaultFont;
     #endregion
@@ -213,7 +213,6 @@ namespace TimeBeam {
     }
     #endregion
 
-
     /// <summary>
     ///   Add a track to the timeline.
     /// </summary>
@@ -271,7 +270,7 @@ namespace TimeBeam {
     }
 
     /// <summary>
-    /// Calculate an Em-height for a font to fit within a given height.
+    ///   Calculate an Em-height for a font to fit within a given height.
     /// </summary>
     /// <param name="label">The text to use for the measurement.</param>
     /// <param name="maxHeight">The largest height the text must fit into.</param>
@@ -288,7 +287,6 @@ namespace TimeBeam {
       return size - 1;
     }
     #endregion
-
 
     #region Drawing Methods
     /// <summary>
@@ -398,7 +396,7 @@ namespace TimeBeam {
         GraphicsContainer.DrawString( label, _labelFont, Brushes.LightGray, labelRect );
       }
     }
-    
+
     /// <summary>
     ///   Retrieve the index of a given track.
     ///   If the track is a surrogate, returns the index of the track it's a substitute for.
@@ -649,7 +647,7 @@ namespace TimeBeam {
         for( int trackIndex = 0; trackIndex < _tracks.Count; trackIndex++ ) {
           ITimelineTrack track = _tracks[ trackIndex ];
           RectangleF boundingRectangle = GetTrackExtents( track );
-          
+
           // Check if the track item is selected by the selection rectangle.
           if( SelectionHelper.IsSelected( selectionRectangle, boundingRectangle, ModifierKeys ) ) {
             // Add it to the selection.
