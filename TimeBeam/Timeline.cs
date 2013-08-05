@@ -183,9 +183,11 @@ namespace TimeBeam {
       // Generate colors for the tracks.
       List<Color> colors = ColorHelper.GetRandomColors( _tracks.Count );
 
-      int trackOffset = 0;
-      for( int trackIndex = 0; trackIndex < tracks.Count; trackIndex++ ) {
-        ITimelineTrack track = tracks[ trackIndex ];
+      foreach( ITimelineTrack track in tracks ) {
+        // The index of this track (or the one it's a substitute for).
+        int trackIndex = TrackIndexForTrack( track );
+        // Offset the next track to the appropriate position.
+        int trackOffset = (TrackHeight + TrackSpacing) * trackIndex;
 
         // Determine colors for this track
         Color trackColor = colors[ trackIndex ];
@@ -213,10 +215,21 @@ namespace TimeBeam {
         trackExtent.Width -= TrackBorderSize;
 
         GraphicsContainer.DrawRectangle( new Pen( borderColor, TrackBorderSize ), trackExtent.X, trackExtent.Y, trackExtent.Width, trackExtent.Height );
-
-        // Offset the next track to the appropriate position.
-        trackOffset += TrackHeight + TrackSpacing;
       }
+    }
+
+    /// <summary>
+    /// Retrieve the index of a given track.
+    /// If the track is a surrogate, returns the index of the track it's a substitute for.
+    /// </summary>
+    /// <param name="track">The track for which to retrieve the index.</param>
+    /// <returns>The index of the track or the index the track is a substitute for.</returns>
+    private int TrackIndexForTrack( ITimelineTrack track ) {
+      ITimelineTrack trackToLookFor = track;
+      if( track is TrackSurrogate ) {
+        trackToLookFor = ((TrackSurrogate)track).SubstituteFor;
+      }
+      return _tracks.IndexOf( trackToLookFor );
     }
 
     /// <summary>
