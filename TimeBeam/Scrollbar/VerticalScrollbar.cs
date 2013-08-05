@@ -11,7 +11,7 @@ namespace TimeBeam.Scrollbar {
     /// <summary>
     ///   Construct a new vertical scrollbar.
     /// </summary>
-    public VerticalScrollbar() {
+    public VerticalScrollbar() : base( ScrollOrientation.VerticalScroll ) {
       InitializeComponent();
     }
 

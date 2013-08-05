@@ -19,7 +19,27 @@ namespace TimeBeam {
     /// </summary>
     [Description( "The current value of the scrollbar." )]
     [Category( "Value" )]
-    public int Value { get; set; }
+    public int Value {
+      get { return _value; }
+      set {
+        int oldValue = _value;
+        _value = Math.Max( Min, Math.Min( Max, value ) );
+        InvokeScrollEvent( new ScrollEventArgs( ScrollEventType.ThumbPosition, oldValue, _value, Orientation ) );
+
+        if( _value == Min ) {
+          InvokeScrollEvent( new ScrollEventArgs( ScrollEventType.First, oldValue, _value, Orientation ) );
+        } else if( _value == Max ) {
+          InvokeScrollEvent( new ScrollEventArgs( ScrollEventType.Last, oldValue, _value, Orientation ) );
+        }
+
+        Redraw();
+      }
+    }
+
+    /// <summary>
+    ///   Backing field for <see cref="Value" />.
+    /// </summary>
+    private int _value;
 
     /// <summary>
     ///   The smallest possible value of the scrollbar.
@@ -100,6 +120,11 @@ namespace TimeBeam {
 
     #region Scrolling
     /// <summary>
+    ///   The orientation of the scrollbar.
+    /// </summary>
+    public ScrollOrientation Orientation { get; protected set; }
+
+    /// <summary>
     ///   The pixel position at which the user started holding down the mouse button that will activate the scrolling action.
     ///   This is used to calculate an offset during the scrolling process and then apply it onto the original position of the thumb.
     /// </summary>
@@ -113,13 +138,14 @@ namespace TimeBeam {
     /// <see cref="ScrollDeltaOrigin" />
     protected int ScrollOrigin;
 
+
     /// <summary>
     ///   Invoked when the scrollbar is being scrolled.
     /// </summary>
     public new event EventHandler<ScrollEventArgs> Scroll;
 
     /// <summary>
-    /// Invoked the <see cref="Scroll"/> event.
+    ///   Invoked the <see cref="Scroll" /> event.
     /// </summary>
     /// <param name="eventArgs">The arguments to pass with the event.</param>
     protected void InvokeScrollEvent( ScrollEventArgs eventArgs ) {
@@ -132,7 +158,9 @@ namespace TimeBeam {
     /// <summary>
     ///   Construct a new scrollbar
     /// </summary>
-    protected AbstractScrollbar() {
+    protected AbstractScrollbar( ScrollOrientation orientation ) {
+      Orientation = orientation;
+
       InitializeComponent();
       InitializePixelMap();
     }

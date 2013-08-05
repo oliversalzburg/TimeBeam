@@ -153,6 +153,9 @@ namespace TimeBeam {
     public Timeline() {
       InitializeComponent();
       InitializePixelMap();
+
+      // Attach mouse wheel scroll handler.
+      MouseWheel += TimelineMouseWheel;
     }
 
     /// <summary>
@@ -161,6 +164,7 @@ namespace TimeBeam {
     /// <param name="track">The track to add.</param>
     public void AddTrack( ITimelineTrack track ) {
       _tracks.Add( track );
+      ScrollbarV.Max = _tracks.Count * ( TrackHeight + TrackSpacing );
       RedrawAndRefresh();
     }
 
@@ -467,6 +471,15 @@ namespace TimeBeam {
     private void ScrollbarHScroll( object sender, ScrollEventArgs e ) {
       _renderingOffset.X = -e.NewValue;
       RedrawAndRefresh();
+    }
+
+    /// <summary>
+    /// Invoked when the user scrolls the mouse wheel.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    void TimelineMouseWheel( object sender, MouseEventArgs e ) {
+      ScrollbarV.Value -= e.Delta / 10;
     }
     #endregion
   }

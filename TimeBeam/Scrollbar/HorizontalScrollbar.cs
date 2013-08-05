@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -11,7 +10,7 @@ namespace TimeBeam.Scrollbar {
     /// <summary>
     ///   Construct a new horizontal scrollbar.
     /// </summary>
-    public HorizontalScrollbar() {
+    public HorizontalScrollbar() : base( ScrollOrientation.HorizontalScroll ) {
       InitializeComponent();
     }
 
