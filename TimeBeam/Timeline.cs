@@ -413,8 +413,8 @@ namespace TimeBeam {
           ITimelineTrack track = _tracks[ trackIndex ];
           // Construct a rectangle that contains the whole track item.
           RectangleF boundingRectangle = RectangleHelper.Normalize( new PointF( track.Start, trackOffset ), new PointF( track.End, trackOffset + TrackHeight ) );
-          // Check if the track item is contained in the selection rectangle.
-          if( selectionRectangle.Contains( boundingRectangle ) ) {
+          // Check if the track item is selected by the selection rectangle.
+          if( SelectionHelper.IsSelected( selectionRectangle, boundingRectangle, ModifierKeys ) ) {
             // Add it to the selection.
             _selectedTracks.Add( track );
           }

@@ -44,6 +44,7 @@
     <Compile Include="Helper\ColorHelper.cs" />
     <Compile Include="Helper\Extensions.cs" />
     <Compile Include="Helper\RectangleHelper.cs" />
+    <Compile Include="Helper\SelectionHelper.cs" />
     <Compile Include="Helper\SurrogateHelper.cs" />
     <Compile Include="ITimelineTrack.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
