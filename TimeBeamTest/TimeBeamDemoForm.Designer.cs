@@ -35,7 +35,7 @@
       this.timeline1.Name = "timeline1";
       this.timeline1.Size = new System.Drawing.Size(1046, 222);
       this.timeline1.TabIndex = 0;
-      this.timeline1.TrackBorderSize = 0;
+      this.timeline1.TrackBorderSize = 2;
       this.timeline1.TrackHeight = 20;
       this.timeline1.TrackSpacing = 1;
       // 
