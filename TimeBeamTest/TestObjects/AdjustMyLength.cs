@@ -9,6 +9,7 @@ namespace TimeBeamTest.TestObjects {
   class AdjustMyLength : ITimelineTrack {
     public float Start { get; set; }
     public float End { get; set; }
+    public string Name { get; set; }
 
     public void Selected() {
       Debug.WriteLine( "Selected" );

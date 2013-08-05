@@ -270,6 +270,26 @@ namespace TimeBeam {
     }
 
     /// <summary>
+    ///   Check if a track is located at the given position.
+    /// </summary>
+    /// <param name="test">The point to test for.</param>
+    /// <returns>
+    ///   The <see cref="ITimelineTrack" /> if there is one under the given point; <see langword="null" /> otherwise.
+    /// </returns>
+    private ITimelineTrack TrackHitTest( PointF test ) {
+      foreach( ITimelineTrack track in _tracks ) {
+        // The extent of the track, including the border
+        RectangleF trackExtent = GetTrackExtents( track );
+
+        if( trackExtent.Contains( test ) ) {
+          return track;
+        }
+      }
+
+      return null;
+    }
+
+    /// <summary>
     ///   Calculate an Em-height for a font to fit within a given height.
     /// </summary>
     /// <param name="label">The text to use for the measurement.</param>
@@ -387,13 +407,15 @@ namespace TimeBeam {
       }
     }
 
+    /// <summary>
+    ///   Draw the labels next to each track.
+    /// </summary>
     private void DrawTrackLabels() {
       foreach( ITimelineTrack track in _tracks ) {
         RectangleF trackExtents = GetTrackExtents( track );
         RectangleF labelRect = new RectangleF( 0, trackExtents.Y, TrackLabelWidth, trackExtents.Height );
         GraphicsContainer.FillRectangle( new SolidBrush( Color.FromArgb( 50, 50, 50 ) ), labelRect );
-        string label = "<No Name>";
-        GraphicsContainer.DrawString( label, _labelFont, Brushes.LightGray, labelRect );
+        GraphicsContainer.DrawString( track.Name, _labelFont, Brushes.LightGray, labelRect );
       }
     }
 
@@ -421,26 +443,6 @@ namespace TimeBeam {
       Refresh();
     }
     #endregion
-
-    /// <summary>
-    ///   Check if a track is located at the given position.
-    /// </summary>
-    /// <param name="test">The point to test for.</param>
-    /// <returns>
-    ///   The <see cref="ITimelineTrack" /> if there is one under the given point; <see langword="null" /> otherwise.
-    /// </returns>
-    private ITimelineTrack TrackHitTest( PointF test ) {
-      foreach( ITimelineTrack track in _tracks ) {
-        // The extent of the track, including the border
-        RectangleF trackExtent = GetTrackExtents( track );
-
-        if( trackExtent.Contains( test ) ) {
-          return track;
-        }
-      }
-
-      return null;
-    }
 
     #region Event Handler
     /// <summary>
