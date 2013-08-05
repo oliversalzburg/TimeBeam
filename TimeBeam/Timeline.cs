@@ -86,7 +86,25 @@ namespace TimeBeam {
     /// </summary>
     private Color _backgroundColor = Color.Black;
 
+    /// <summary>
+    ///   When the timeline is scrolled (panned) around, this offset represents the panned distance.
+    /// </summary>
     private PointF _renderingOffset = PointF.Empty;
+
+    /// <summary>
+    ///   The transparency of the background grid.
+    /// </summary>
+    [Description( "The transparency of the background grid." )]
+    [Category( "Drawing" )]
+    public int GridAlpha {
+      get { return _gridAlpha; }
+      set { _gridAlpha = value; }
+    }
+
+    /// <summary>
+    ///   Backing field for <see cref="GridAlpha" />.
+    /// </summary>
+    private int _gridAlpha = 40;
     #endregion
 
     #region Tracks
@@ -186,13 +204,37 @@ namespace TimeBeam {
       // Clear the buffer
       GraphicsContainer.Clear( BackgroundColor );
 
+      DrawBackground();
       DrawTracks( _tracks );
       DrawTracks( _trackSurrogates );
     }
 
+    /// <summary>
+    ///   Redraws the control and then invokes a refresh to have it redrawn on screen.
+    /// </summary>
     private void RedrawAndRefresh() {
       Redraw();
       Refresh();
+    }
+
+    /// <summary>
+    ///   Draws the background of the control.
+    /// </summary>
+    private void DrawBackground() {
+      // Draw horizontal grid.
+      for( int y = TrackHeight + (int)_renderingOffset.Y; y < Height; y += ( TrackHeight + TrackSpacing ) ) {
+        GraphicsContainer.DrawLine( new Pen( Color.FromArgb( GridAlpha, Color.White ) ), 0, y, Width, y );
+      }
+
+      // Draw a vertical grid. Every 10 ticks, we place a line.
+      for( int x = 0; x < Width; x += 10 ) {
+        int alpha = GridAlpha;
+        // Every 60 ticks, we put a brighter line.
+        if( x % 60 == 0 ) {
+          alpha = Math.Min( 255, alpha *= 2 );
+        }
+        GraphicsContainer.DrawLine( new Pen( Color.FromArgb( alpha, Color.White ) ), x, 0, x, Height );
+      }
     }
 
     /// <summary>
