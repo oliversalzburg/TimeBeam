@@ -290,11 +290,14 @@ namespace TimeBeam {
       // The index of this track (or the one it's a substitute for).
       int trackIndex = TrackIndexForTrack( track );
       int actualRowHeight = (int)( ( TrackHeight + TrackSpacing ) * _renderingScale.Y );
-      // Offset the next track to the appropriate position.
-      int trackOffset = (int)( ( actualRowHeight * trackIndex + _renderingOffset.Y ) );
+      // Calculate the Y offset for the track.
+      int trackOffsetY = (int)( ( actualRowHeight * trackIndex + _renderingOffset.Y ) );
+
+      // Calculate the X offset for track.
+      int trackOffsetX = (int)( trackAreaBounds.X + ( track.Start * _renderingScale.X ) + _renderingOffset.X );
 
       // The extent of the track, including the border
-      RectangleF trackExtent = new RectangleF( trackAreaBounds.X + track.Start + _renderingOffset.X, trackOffset, track.End - track.Start, TrackHeight * _renderingScale.Y );
+      RectangleF trackExtent = new RectangleF( trackOffsetX, trackOffsetY, ( track.End - track.Start ) * _renderingScale.X, TrackHeight * _renderingScale.Y );
       return trackExtent;
     }
 
@@ -397,13 +400,22 @@ namespace TimeBeam {
         GraphicsContainer.DrawLine( new Pen( Color.FromArgb( GridAlpha, Color.White ) ), trackAreaBounds.X, y, trackAreaBounds.Width, y );
       }
 
+      // The distance between the regular ticks.
+      int tickDistance = (int)( 10f * _renderingScale.X );
+      // The distance between minute ticks
+      int minuteDistance = (int)( 60f * _renderingScale.X );
+
       // Draw a vertical grid. Every 10 ticks, we place a line.
-      int tickOffset = (int)_renderingOffset.X % 10;
-      int minuteOffset = (int)_renderingOffset.X % 60;
-      for( int x = tickOffset; x < Width; x += 10 ) {
+      int tickOffset = (int)( _renderingOffset.X % tickDistance );
+      int minuteOffset = (int)( _renderingOffset.X % minuteDistance );
+      // Calculate the distance between each column line.
+      int columnWidth = (int)( 10 * _renderingScale.X );
+      columnWidth = Math.Max( 1, columnWidth );
+
+      for( int x = tickOffset; x < Width; x += columnWidth ) {
         int alpha = GridAlpha;
         // Every 60 ticks, we put a brighter, thicker line.
-        if( ( x - minuteOffset ) % 60 == 0 ) {
+        if( ( x - minuteOffset ) % minuteDistance == 0 ) {
           alpha = Math.Min( 255, alpha *= 2 );
         }
         GraphicsContainer.DrawLine( new Pen( Color.FromArgb( alpha, Color.White ) ), trackAreaBounds.X + x, trackAreaBounds.Y, trackAreaBounds.X + x, trackAreaBounds.Height );
@@ -787,7 +799,14 @@ namespace TimeBeam {
     private void TimelineMouseWheel( object sender, MouseEventArgs e ) {
       if( IsKeyDown( Keys.Alt ) ) {
         // If Alt is down, we're zooming.
-        _renderingScale.Y += e.Delta / 1200f;
+        if( IsKeyDown( Keys.Control ) ) {
+          // If Ctrl is down as well, we're zooming horizontally.
+          _renderingScale.X += e.Delta / 1200f;
+
+        } else {
+          // If Ctrl isn't  down, we're zooming vertically.
+          _renderingScale.Y += e.Delta / 1200f;
+        }
 
         Redraw();
 
