@@ -169,6 +169,12 @@ namespace TimeBeam {
     }
     #endregion
 
+    #region Constructor
+    /// <summary>
+    ///   Parameterless constructor for Designer.
+    /// </summary>
+    public AbstractScrollbar() {}
+
     /// <summary>
     ///   Construct a new scrollbar
     /// </summary>
@@ -178,6 +184,7 @@ namespace TimeBeam {
       InitializeComponent();
       InitializePixelMap();
     }
+    #endregion
 
     /// <summary>
     ///   Redraws the scrollbar.
