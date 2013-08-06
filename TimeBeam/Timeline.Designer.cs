@@ -62,20 +62,12 @@ namespace TimeBeam {
       // 
       // Timeline
       // 
-      this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-      this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
       this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
       this.Controls.Add(this.ScrollbarV);
       this.Controls.Add(this.ScrollbarH);
       this.DoubleBuffered = true;
       this.Name = "Timeline";
       this.Size = new System.Drawing.Size(800, 200);
-      this.Load += new System.EventHandler(this.TimelineLoad);
-      this.Paint += new System.Windows.Forms.PaintEventHandler(this.TimelinePaint);
-      this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.TimelineMouseDown);
-      this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.TimelineMouseMove);
-      this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.TimelineMouseUp);
-      this.Resize += new System.EventHandler(this.TimelineResize);
       this.ResumeLayout(false);
 
     }

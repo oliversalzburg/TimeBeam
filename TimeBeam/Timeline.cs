@@ -13,7 +13,7 @@ namespace TimeBeam {
   /// <summary>
   ///   The main host control.
   /// </summary>
-  public partial class Timeline : UserControl {
+  public partial class Timeline : Control {
     #region Layout
     /// <summary>
     ///   How high a single track should be.
@@ -209,7 +209,7 @@ namespace TimeBeam {
     }
 
     /// <summary>
-    ///   Backing field for <see cref="Clock"/>.
+    ///   Backing field for <see cref="Clock" />.
     /// </summary>
     private IClock _clock;
     #endregion
@@ -248,14 +248,14 @@ namespace TimeBeam {
     /// </summary>
     public Timeline() {
       InitializeComponent();
+      SetStyle(
+        ControlStyles.AllPaintingInWmPaint | ControlStyles.Opaque | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw | ControlStyles.Selectable | ControlStyles.UserPaint, true );
+
       InitializePixelMap();
 
       // Set up the font to use to draw the track labels
       float emHeightForLabel = EmHeightForLabel( "WM_g^~", TrackHeight );
       _labelFont = new Font( DefaultFont.FontFamily, emHeightForLabel );
-
-      // Attach mouse wheel scroll handler.
-      MouseWheel += TimelineMouseWheel;
     }
     #endregion
 
@@ -578,7 +578,9 @@ namespace TimeBeam {
     /// </summary>
     /// <param name="sender"></param>
     /// <param name="e"></param>
-    private void TimelineResize( object sender, EventArgs e ) {
+    protected override void OnResize( EventArgs e ) {
+      base.OnResize( e );
+
       InitializePixelMap();
       RedrawAndRefresh();
     }
@@ -586,28 +588,21 @@ namespace TimeBeam {
     /// <summary>
     ///   Invoked when the control is repainted
     /// </summary>
-    /// <param name="sender"></param>
     /// <param name="e"></param>
-    private void TimelinePaint( object sender, PaintEventArgs e ) {
-      e.Graphics.DrawImage( PixelMap, 0, 0 );
-    }
+    protected override void OnPaint( PaintEventArgs e ) {
+      base.OnPaint( e );
 
-    /// <summary>
-    ///   Invoked once the timeline has loaded.
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private void TimelineLoad( object sender, EventArgs e ) {
-      RedrawAndRefresh();
+      e.Graphics.DrawImage( PixelMap, 0, 0 );
     }
 
     /// <summary>
     ///   Invoked when the cursor is moved over the control.
     /// </summary>
-    /// <param name="sender"></param>
     /// <param name="e"></param>
     /// <exception cref="InvalidOperationException">Selection origin not set. This shouldn't happen.</exception>
-    private void TimelineMouseMove( object sender, MouseEventArgs e ) {
+    protected override void OnMouseMove( MouseEventArgs e ) {
+      base.OnMouseMove( e );
+
       // Store the current mouse position.
       PointF location = new PointF( e.X, e.Y );
       // Check if there is a track at the current mouse position.
@@ -676,7 +671,7 @@ namespace TimeBeam {
         // Make sure to stay within bounds.
         _renderingOffset.X = Math.Max( -ScrollbarH.Max, Math.Min( 0, _renderingOffset.X ) );
         _renderingOffset.Y = Math.Max( -ScrollbarV.Max, Math.Min( 0, _renderingOffset.Y ) );
-        
+
         // Update scrollbar positions. This will invoke a redraw.
         ScrollbarH.Value = (int)( -_renderingOffset.X );
         ScrollbarV.Value = (int)( -_renderingOffset.Y );
@@ -723,9 +718,10 @@ namespace TimeBeam {
     /// <summary>
     ///   Invoked when the user presses a mouse button over the control.
     /// </summary>
-    /// <param name="sender"></param>
     /// <param name="e"></param>
-    private void TimelineMouseDown( object sender, MouseEventArgs e ) {
+    protected override void OnMouseDown( MouseEventArgs e ) {
+      base.OnMouseDown( e );
+
       // Store the current mouse position.
       PointF location = new PointF( e.X, e.Y );
 
@@ -779,9 +775,10 @@ namespace TimeBeam {
     /// <summary>
     ///   Invoked when the user releases the mouse cursor over the control.
     /// </summary>
-    /// <param name="sender"></param>
     /// <param name="e"></param>
-    private void TimelineMouseUp( object sender, MouseEventArgs e ) {
+    protected override void OnMouseUp( MouseEventArgs e ) {
+      base.OnMouseUp( e );
+
       // Store the current mouse position.
       PointF location = new PointF( e.X, e.Y );
 
@@ -856,9 +853,10 @@ namespace TimeBeam {
     /// <summary>
     ///   Invoked when the user scrolls the mouse wheel.
     /// </summary>
-    /// <param name="sender"></param>
     /// <param name="e"></param>
-    private void TimelineMouseWheel( object sender, MouseEventArgs e ) {
+    protected override void OnMouseWheel( MouseEventArgs e ) {
+      base.OnMouseWheel( e );
+
       if( IsKeyDown( Keys.Alt ) ) {
         // Zooming does not require a Redraw() call, as scrolling will fire off a Scroll event which will then cause a redraw anyway.
 
