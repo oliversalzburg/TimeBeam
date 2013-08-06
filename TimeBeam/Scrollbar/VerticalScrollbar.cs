@@ -89,7 +89,7 @@ namespace TimeBeam.Scrollbar {
       // The smallest possible size for the thumb should be 10% of the height or MinThumbExtent; whatever is bigger.
       float minHeight = Math.Max( MinThumbExtent, Height * 0.1f );
       float naiveHeight = (float)Height - ( Max - Min );
-      ThumbBounds.Height = (int)Math.Max( minHeight, naiveHeight * 0.1f );
+      ThumbBounds.Height = (int)Math.Max( minHeight, naiveHeight );
 
       // Add a 10% margin on left and right.
       ThumbBounds.Width = (int)( Width * 0.8f );
