@@ -2,7 +2,7 @@
 
 A timeline control for .NET (which is still under development).
 
-![Added a playhead](http://i.imgur.com/MvPK02C.png)
+![Zooming enabled](http://i.imgur.com/mK9GXug.png)
 
 ## Input
  <kbd>Shift</kbd> | <kbd>Ctrl</kbd> | <kbd>Alt</kbd> | Button/Key     | Action
@@ -20,6 +20,8 @@ If you hold <kbd>Ctrl</kbd>, anything that is *contained* within the selection r
 ---
 
 ### Older screenshots
+![Added a playhead](http://i.imgur.com/MvPK02C.png)
+
 ![Added track labels](http://i.imgur.com/QKG6M3V.png)
 
 ![](http://i.imgur.com/c2c1C38.png)
