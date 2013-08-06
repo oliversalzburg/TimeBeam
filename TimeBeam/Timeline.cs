@@ -430,12 +430,17 @@ namespace TimeBeam {
 
       // The distance between the regular ticks.
       int tickDistance = (int)( 10f * _renderingScale.X );
+      tickDistance = Math.Max( 1, tickDistance );
+
       // The distance between minute ticks
-      int minuteDistance = (int)( 60f * _renderingScale.X );
+      int minuteDistance = tickDistance * 6;
 
       // Draw a vertical grid. Every 10 ticks, we place a line.
       int tickOffset = (int)( _renderingOffset.X % tickDistance );
+      tickOffset = Math.Max( 1, tickOffset );
       int minuteOffset = (int)( _renderingOffset.X % minuteDistance );
+      minuteOffset = Math.Max( 1, minuteOffset );
+
       // Calculate the distance between each column line.
       int columnWidth = (int)( 10 * _renderingScale.X );
       columnWidth = Math.Max( 1, columnWidth );
@@ -831,7 +836,6 @@ namespace TimeBeam {
     /// <summary>
     ///   Invoked when a key is released.
     /// </summary>
-    /// <param name="sender"></param>
     /// <param name="e"></param>
     protected override void OnKeyUp( KeyEventArgs e ) {
       base.OnKeyUp( e );
@@ -886,6 +890,8 @@ namespace TimeBeam {
         if( IsKeyDown( Keys.Control ) ) {
           // If Ctrl is down as well, we're zooming horizontally.
           _renderingScale.X += amount;
+          // Don't zoom below 1%
+          _renderingScale.X = Math.Max( 0.01f, _renderingScale.X );
 
           // We now also need to move the rendering offset so that the center of focus stays at the mouse cursor.
           _renderingOffset.X -= trackAreaBounds.Width * ( ( e.Location.X - trackAreaBounds.X ) / (float)trackAreaBounds.Width ) * amount;
@@ -897,6 +903,8 @@ namespace TimeBeam {
         } else {
           // If Ctrl isn't  down, we're zooming vertically.
           _renderingScale.Y += amount;
+          // Don't zoom below 1%
+          _renderingScale.Y = Math.Max( 0.01f, _renderingScale.Y );
 
           // We now also need to move the rendering offset so that the center of focus stays at the mouse cursor.
           _renderingOffset.Y -= trackAreaBounds.Height * ( ( e.Location.Y - trackAreaBounds.Y ) / (float)trackAreaBounds.Height ) * amount;
