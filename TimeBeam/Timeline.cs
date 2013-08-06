@@ -436,10 +436,8 @@ namespace TimeBeam {
       int minuteDistance = tickDistance * 6;
 
       // Draw a vertical grid. Every 10 ticks, we place a line.
-      int tickOffset = (int)( _renderingOffset.X % tickDistance );
-      tickOffset = Math.Max( 1, tickOffset );
+      int tickOffset = (int)( _renderingOffset.X % tickDistance ) + tickDistance;
       int minuteOffset = (int)( _renderingOffset.X % minuteDistance );
-      minuteOffset = Math.Max( 1, minuteOffset );
 
       // Calculate the distance between each column line.
       int columnWidth = (int)( 10 * _renderingScale.X );
