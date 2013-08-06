@@ -200,7 +200,18 @@ namespace TimeBeam {
     /// <summary>
     ///   The clock to use as the timing source.
     /// </summary>
-    public IClock Clock { get; set; }
+    public IClock Clock {
+      get { return _clock; }
+      set {
+        _clock = value;
+        RedrawAndRefresh();
+      }
+    }
+
+    /// <summary>
+    ///   Backing field for <see cref="Clock"/>.
+    /// </summary>
+    private IClock _clock;
     #endregion
 
     #region Enums
@@ -472,7 +483,7 @@ namespace TimeBeam {
 
         // Draw the main track area.
         if( track is TrackSurrogate ) {
-          // Draw surrogates with a hatched brush.
+          // Draw surrogates with a transparent brush.
           GraphicsContainer.FillRectangle( new SolidBrush( Color.FromArgb( 128, trackColor ) ), trackExtent );
         } else {
           GraphicsContainer.FillRectangle( new SolidBrush( trackColor ), trackExtent );
