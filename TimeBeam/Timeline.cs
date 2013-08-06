@@ -450,7 +450,10 @@ namespace TimeBeam {
       // Should we draw minor ticks?
       if( minorTickDistance > 2.0f ) {
         for( float x = minorTickOffset; x < Width; x += minorTickDistance ) {
-          GraphicsContainer.DrawLine( new Pen( Color.FromArgb( 30, Color.White ) ){DashStyle = DashStyle.Dot}, trackAreaBounds.X + x, trackAreaBounds.Y, trackAreaBounds.X + x, trackAreaBounds.Height );
+          GraphicsContainer.DrawLine(
+            new Pen( Color.FromArgb( 30, Color.White ) ) {
+              DashStyle = DashStyle.Dot
+            }, trackAreaBounds.X + x, trackAreaBounds.Y, trackAreaBounds.X + x, trackAreaBounds.Height );
         }
       }
 
@@ -540,7 +543,7 @@ namespace TimeBeam {
         // Draw a background for the playhead. This also overdraws elements that drew into the playhead area.
         GraphicsContainer.FillRectangle( Brushes.Black, 0, 0, Width, _playheadExtents.Height );
 
-        float playheadOffset = (float)( trackAreaBounds.X + ( Clock.Value * 0.001f ) ) + _renderingOffset.X;
+        float playheadOffset = (float)( trackAreaBounds.X + ( Clock.Value * 0.001f ) * _renderingScale.X ) + _renderingOffset.X;
         // Don't draw when not in view.
         if( playheadOffset < trackAreaBounds.X || playheadOffset > trackAreaBounds.X + trackAreaBounds.Width ) {
           return;
