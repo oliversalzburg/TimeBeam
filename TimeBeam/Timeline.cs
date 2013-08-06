@@ -372,11 +372,12 @@ namespace TimeBeam {
       DrawBackground();
       DrawTracks( _tracks );
       DrawTracks( _trackSurrogates );
-      DrawPlayhead();
       DrawSelectionRectangle();
 
       // Draw labels after the tracks to draw over elements that are partially moved out of the viewing area
       DrawTrackLabels();
+
+      DrawPlayhead();
     }
 
     /// <summary>
