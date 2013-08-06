@@ -283,8 +283,8 @@ namespace TimeBeam {
     ///   Recalculates appropriate values for scrollbar bounds.
     /// </summary>
     private void RecalculateScrollbarBounds() {
-      ScrollbarV.Max = _tracks.Count * ( TrackHeight + TrackSpacing );
-      ScrollbarH.Max = (int)_tracks.Max( t => t.End );
+      ScrollbarV.Max = (int)( ( _tracks.Count * ( TrackHeight + TrackSpacing ) ) * _renderingScale.Y );
+      ScrollbarH.Max = (int)( _tracks.Max( t => t.End ) * _renderingScale.X );
     }
 
     /// <summary>
@@ -428,6 +428,10 @@ namespace TimeBeam {
         GraphicsContainer.DrawLine( new Pen( Color.FromArgb( GridAlpha, Color.White ) ), trackAreaBounds.X, y, trackAreaBounds.Width, y );
       }
 
+      // The dinstance between the minor ticks.
+      float minorTickDistance = _renderingScale.X;
+      int minorTickOffset = (int)( _renderingOffset.X % minorTickDistance );
+
       // The distance between the regular ticks.
       int tickDistance = (int)( 10f * _renderingScale.X );
       tickDistance = Math.Max( 1, tickDistance );
@@ -436,14 +440,23 @@ namespace TimeBeam {
       int minuteDistance = tickDistance * 6;
 
       // Draw a vertical grid. Every 10 ticks, we place a line.
-      int tickOffset = (int)( _renderingOffset.X % tickDistance ) + tickDistance;
+      int tickOffset = (int)( _renderingOffset.X % tickDistance );
       int minuteOffset = (int)( _renderingOffset.X % minuteDistance );
 
       // Calculate the distance between each column line.
       int columnWidth = (int)( 10 * _renderingScale.X );
       columnWidth = Math.Max( 1, columnWidth );
 
-      for( int x = tickOffset; x < Width; x += columnWidth ) {
+      // Should we draw minor ticks?
+      if( minorTickDistance > 2.0f ) {
+        for( float x = minorTickOffset; x < Width; x += minorTickDistance ) {
+          GraphicsContainer.DrawLine( new Pen( Color.FromArgb( 30, Color.White ) ){DashStyle = DashStyle.Dot}, trackAreaBounds.X + x, trackAreaBounds.Y, trackAreaBounds.X + x, trackAreaBounds.Height );
+        }
+      }
+
+      // We start one tick distance after the offset to draw the first line that is actually in the display area
+      // The one that is only tickOffset pixels away it behind the track labels.
+      for( int x = tickOffset + tickDistance; x < Width; x += columnWidth ) {
         int alpha = GridAlpha;
         // Every 60 ticks, we put a brighter, thicker line.
         if( ( x - minuteOffset ) % minuteDistance == 0 ) {
@@ -911,6 +924,7 @@ namespace TimeBeam {
           // Update scrollbar position.
           ScrollbarV.Value = (int)( -_renderingOffset.Y );
         }
+        RecalculateScrollbarBounds();
 
       } else {
         // Scrolling does not require a Redraw() call, as scrolling will fire off a Scroll event which will then cause a redraw anyway.
