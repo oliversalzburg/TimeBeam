@@ -5,9 +5,12 @@ A timeline control for .NET (which is still under development).
 ![Added a playhead](http://i.imgur.com/MvPK02C.png)
 
 ## Input
-**MouseWheel** = Scroll vertically  
-**Ctrl** + **MouseWheel** = Scroll horizontally
-**Alt** + **MouseWheel** = Zoom vertically
+ Shift | Ctrl  | Alt   | Button/Key     | Action
+:-----:|:-----:|:-----:|----------------|----------------------
+       |       |       | **MouseWheel** | Scroll vertically
+       | **X** |       | **MouseWheel** | Scroll horizontally
+       |       | **X** | **MouseWheel** | Zoom vertically
+       | **X** | **X** | **MouseWheel** | Zoom horizontally
 
 ### Selection
 By default, anything that *intersects* with the selection rectangle is selected.  
