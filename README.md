@@ -11,6 +11,7 @@ A timeline control for .NET (which is still under development).
                   | <kbd>Ctrl</kbd> |                | **MouseWheel** | Scroll horizontally
                   |                 | <kbd>Alt</kbd> | **MouseWheel** | Zoom vertically
                   | <kbd>Ctrl</kbd> | <kbd>Alt</kbd> | **MouseWheel** | Zoom horizontally
+                  |                 |                | **Middle**     | Pan
 
 ### Selection
 By default, anything that *intersects* with the selection rectangle is selected.  

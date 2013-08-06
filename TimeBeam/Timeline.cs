@@ -175,6 +175,17 @@ namespace TimeBeam {
     private PointF _selectionOrigin;
 
     /// <summary>
+    ///   The point where the user started panning the view.
+    /// </summary>
+    private PointF _panOrigin;
+
+    /// <summary>
+    ///   The rendering offset as it was before a panning operation started.
+    ///   Remembering this allows us to dynamically apply a delta during the panning operation.
+    /// </summary>
+    private PointF _renderingOffsetBeforePan = PointF.Empty;
+
+    /// <summary>
     ///   The current selection rectangle.
     /// </summary>
     private RectangleF _selectionRectangle = RectangleF.Empty;
@@ -644,6 +655,15 @@ namespace TimeBeam {
           RedrawAndRefresh();
         }
 
+      } else if( ( e.Button & MouseButtons.Middle ) != 0 ) {
+        // Pan the view
+        // Calculate the movement delta.
+        PointF delta = PointF.Subtract( location, new SizeF( _panOrigin ) );
+        // Now apply the delta to the rendering offsets to pan the view.
+        _renderingOffset = PointF.Add( _renderingOffsetBeforePan, new SizeF( delta ) );
+
+        RedrawAndRefresh();
+
       } else {
         // No mouse button is being pressed
         if( null != focusedTrack ) {
@@ -691,42 +711,49 @@ namespace TimeBeam {
     private void TimelineMouseDown( object sender, MouseEventArgs e ) {
       // Store the current mouse position.
       PointF location = new PointF( e.X, e.Y );
-      // Check if there is a track at the current mouse position.
-      ITimelineTrack focusedTrack = TrackHitTest( location );
 
-      if( null != focusedTrack ) {
-        // Was this track already selected?
-        if( !_selectedTracks.Contains( focusedTrack ) ) {
-          // Tell the track that it was selected.
-          focusedTrack.Selected();
-          // Store a reference to the selected track
-          _selectedTracks.Clear();
-          _selectedTracks.Add( focusedTrack );
-        }
-        // Store the current mouse position. It'll be used later to calculate the movement delta.
-        _dragOrigin = location;
-        // Create and store surrogates for selected timeline tracks.
-        _trackSurrogates = SurrogateHelper.GetSurrogates( _selectedTracks );
+      if( ( e.Button & MouseButtons.Left ) != 0 ) {
+        // Check if there is a track at the current mouse position.
+        ITimelineTrack focusedTrack = TrackHitTest( location );
 
-        // Check whether the user wants to move or resize the selected tracks.
-        RectangleF trackExtents = GetTrackExtents( focusedTrack );
-        RectangleHelper.Edge isPointOnEdge = RectangleHelper.IsPointOnEdge( trackExtents, location, 3f, RectangleHelper.EdgeTest.Horizontal );
-        if( isPointOnEdge != RectangleHelper.Edge.None ) {
-          CurrentMode = BehaviorMode.ResizingSelection;
-          _activeEdge = isPointOnEdge;
+        if( null != focusedTrack ) {
+          // Was this track already selected?
+          if( !_selectedTracks.Contains( focusedTrack ) ) {
+            // Tell the track that it was selected.
+            focusedTrack.Selected();
+            // Store a reference to the selected track
+            _selectedTracks.Clear();
+            _selectedTracks.Add( focusedTrack );
+          }
+          // Store the current mouse position. It'll be used later to calculate the movement delta.
+          _dragOrigin = location;
+          // Create and store surrogates for selected timeline tracks.
+          _trackSurrogates = SurrogateHelper.GetSurrogates( _selectedTracks );
+
+          // Check whether the user wants to move or resize the selected tracks.
+          RectangleF trackExtents = GetTrackExtents( focusedTrack );
+          RectangleHelper.Edge isPointOnEdge = RectangleHelper.IsPointOnEdge( trackExtents, location, 3f, RectangleHelper.EdgeTest.Horizontal );
+          if( isPointOnEdge != RectangleHelper.Edge.None ) {
+            CurrentMode = BehaviorMode.ResizingSelection;
+            _activeEdge = isPointOnEdge;
+          } else {
+            CurrentMode = BehaviorMode.MovingSelection;
+          }
+
+
         } else {
-          CurrentMode = BehaviorMode.MovingSelection;
+          // Reset the track selection.
+          _selectedTracks.Clear();
+
+          // Remember this location as the origin for the selection.
+          _selectionOrigin = location;
+
+          CurrentMode = BehaviorMode.Selecting;
         }
 
-
-      } else {
-        // Reset the track selection.
-        _selectedTracks.Clear();
-
-        // Remember this location as the origin for the selection.
-        _selectionOrigin = location;
-
-        CurrentMode = BehaviorMode.Selecting;
+      } else if( ( e.Button & MouseButtons.Middle ) != 0 ) {
+        _panOrigin = location;
+        _renderingOffsetBeforePan = _renderingOffset;
       }
 
       RedrawAndRefresh();
@@ -741,42 +768,48 @@ namespace TimeBeam {
       // Store the current mouse position.
       PointF location = new PointF( e.X, e.Y );
 
-      if( CurrentMode == BehaviorMode.Selecting ) {
-        // If we were selecting, it's now time to finalize the selection
-        // Construct the correct rectangle spanning from the selection origin to the current cursor position.
-        RectangleF selectionRectangle = RectangleHelper.Normalize( _selectionOrigin, location );
+      if( ( e.Button & MouseButtons.Left ) != 0 ) {
+        if( CurrentMode == BehaviorMode.Selecting ) {
+          // If we were selecting, it's now time to finalize the selection
+          // Construct the correct rectangle spanning from the selection origin to the current cursor position.
+          RectangleF selectionRectangle = RectangleHelper.Normalize( _selectionOrigin, location );
 
-        int trackOffset = 0;
-        for( int trackIndex = 0; trackIndex < _tracks.Count; trackIndex++ ) {
-          ITimelineTrack track = _tracks[ trackIndex ];
-          RectangleF boundingRectangle = GetTrackExtents( track );
+          int trackOffset = 0;
+          for( int trackIndex = 0; trackIndex < _tracks.Count; trackIndex++ ) {
+            ITimelineTrack track = _tracks[ trackIndex ];
+            RectangleF boundingRectangle = GetTrackExtents( track );
 
-          // Check if the track item is selected by the selection rectangle.
-          if( SelectionHelper.IsSelected( selectionRectangle, boundingRectangle, ModifierKeys ) ) {
-            // Add it to the selection.
-            _selectedTracks.Add( track );
+            // Check if the track item is selected by the selection rectangle.
+            if( SelectionHelper.IsSelected( selectionRectangle, boundingRectangle, ModifierKeys ) ) {
+              // Add it to the selection.
+              _selectedTracks.Add( track );
+            }
+            trackOffset += ( TrackBorderSize * 2 ) + TrackHeight;
           }
-          trackOffset += ( TrackBorderSize * 2 ) + TrackHeight;
+
+        } else if( CurrentMode == BehaviorMode.MovingSelection || CurrentMode == BehaviorMode.ResizingSelection ) {
+          // The moving operation ended, apply the values of the surrogates to the originals
+          foreach( TrackSurrogate surrogate in _trackSurrogates ) {
+            surrogate.CopyTo( surrogate.SubstituteFor );
+          }
+          _trackSurrogates.Clear();
+
+          RecalculateScrollbarBounds();
         }
 
-      } else if( CurrentMode == BehaviorMode.MovingSelection || CurrentMode == BehaviorMode.ResizingSelection ) {
-        // The moving operation ended, apply the values of the surrogates to the originals
-        foreach( TrackSurrogate surrogate in _trackSurrogates ) {
-          surrogate.CopyTo( surrogate.SubstituteFor );
-        }
-        _trackSurrogates.Clear();
+        // Reset cursor
+        Cursor = Cursors.Arrow;
+        // Reset selection origin.
+        _selectionOrigin = PointF.Empty;
+        // And the selection rectangle itself.
+        _selectionRectangle = RectangleF.Empty;
+        // Reset mode.
+        CurrentMode = BehaviorMode.Idle;
 
-        RecalculateScrollbarBounds();
+      } else if( ( e.Button & MouseButtons.Middle ) != 0 ) {
+        _panOrigin = PointF.Empty;
+        _renderingOffsetBeforePan = PointF.Empty;
       }
-
-      // Reset cursor
-      Cursor = Cursors.Arrow;
-      // Reset selection origin.
-      _selectionOrigin = PointF.Empty;
-      // And the selection rectangle itself.
-      _selectionRectangle = RectangleF.Empty;
-      // Reset mode.
-      CurrentMode = BehaviorMode.Idle;
 
       RedrawAndRefresh();
     }
@@ -826,7 +859,7 @@ namespace TimeBeam {
 
           // Update scrollbar position.
           ScrollbarH.Value = (int)( -_renderingOffset.X );
-          
+
         } else {
           // If Ctrl isn't  down, we're zooming vertically.
           _renderingScale.Y += amount;
