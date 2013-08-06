@@ -7,6 +7,7 @@ A timeline control for .NET (which is still under development).
 ## Input
 **MouseWheel** = Scroll vertically  
 **Ctrl** + **MouseWheel** = Scroll horizontally
+**Alt** + **MouseWheel** = Zoom vertically
 
 ### Selection
 By default, anything that *intersects* with the selection rectangle is selected.  

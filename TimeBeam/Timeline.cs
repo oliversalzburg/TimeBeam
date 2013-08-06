@@ -114,6 +114,12 @@ namespace TimeBeam {
     private PointF _renderingOffset = PointF.Empty;
 
     /// <summary>
+    ///   The scale at which to render the timeline.
+    ///   This enables us to "zoom" the timeline in and out.
+    /// </summary>
+    private PointF _renderingScale = new PointF( 1, 1 );
+
+    /// <summary>
     ///   The transparency of the background grid.
     /// </summary>
     [Description( "The transparency of the background grid." )]
@@ -283,11 +289,12 @@ namespace TimeBeam {
 
       // The index of this track (or the one it's a substitute for).
       int trackIndex = TrackIndexForTrack( track );
+      int actualRowHeight = (int)( ( TrackHeight + TrackSpacing ) * _renderingScale.Y );
       // Offset the next track to the appropriate position.
-      int trackOffset = ( TrackHeight + TrackSpacing ) * trackIndex + (int)_renderingOffset.Y;
+      int trackOffset = (int)( ( actualRowHeight * trackIndex + _renderingOffset.Y ) );
 
       // The extent of the track, including the border
-      RectangleF trackExtent = new RectangleF( trackAreaBounds.X + track.Start + _renderingOffset.X, trackOffset, track.End - track.Start, TrackHeight );
+      RectangleF trackExtent = new RectangleF( trackAreaBounds.X + track.Start + _renderingOffset.X, trackOffset, track.End - track.Start, TrackHeight * _renderingScale.Y );
       return trackExtent;
     }
 
@@ -328,6 +335,22 @@ namespace TimeBeam {
       }
       return size - 1;
     }
+
+    /// <summary>
+    ///   Helper method to check if a given key is being pressed.
+    /// </summary>
+    /// <param name="key">The key to check if it is being held down.</param>
+    /// <param name="keys">The collection of keys that hold the information about which keys are being held down. If none are provided, ModifierKeys is being used.</param>
+    /// <returns>
+    ///   <see langword="true" /> if the key is down; <see langword="false" /> otherwise.
+    /// </returns>
+    private bool IsKeyDown( Keys key, Keys keys = Keys.None ) {
+      if( Keys.None == keys ) {
+        keys = ModifierKeys;
+      }
+
+      return ( ( keys & key ) != 0 );
+    }
     #endregion
 
     #region Drawing Methods
@@ -364,7 +387,13 @@ namespace TimeBeam {
       Rectangle trackAreaBounds = GetTrackAreaBounds();
 
       // Draw horizontal grid.
-      for( int y = TrackHeight + (int)_renderingOffset.Y; y < Height; y += ( TrackHeight + TrackSpacing ) ) {
+      // Calculate the Y position of the first line.
+      int firstLineY = (int)( ( TrackHeight ) * _renderingScale.Y + _renderingOffset.Y );
+      // Calculate the distance between each following line.
+      int actualRowHeight = (int)( ( TrackHeight + TrackSpacing ) * _renderingScale.Y );
+      actualRowHeight = Math.Max( 1, actualRowHeight );
+      // Draw the actual lines.
+      for( int y = firstLineY; y < Height; y += actualRowHeight ) {
         GraphicsContainer.DrawLine( new Pen( Color.FromArgb( GridAlpha, Color.White ) ), trackAreaBounds.X, y, trackAreaBounds.Width, y );
       }
 
@@ -395,7 +424,6 @@ namespace TimeBeam {
       foreach( ITimelineTrack track in tracks ) {
         // The extent of the track, including the border
         RectangleF trackExtent = GetTrackExtents( track );
-        //trackExtent.Offset( trackAreaBounds.X, trackAreaBounds.Y );
 
         // Don't draw track elements that aren't within the target area.
         if( !trackAreaBounds.IntersectsWith( trackExtent.ToRectangle() ) ) {
@@ -757,10 +785,23 @@ namespace TimeBeam {
     /// <param name="sender"></param>
     /// <param name="e"></param>
     private void TimelineMouseWheel( object sender, MouseEventArgs e ) {
-      if( ( ModifierKeys & Keys.Control ) != 0 ) {
-        ScrollbarH.Value -= e.Delta / 10;
+      if( IsKeyDown( Keys.Alt ) ) {
+        // If Alt is down, we're zooming.
+        _renderingScale.Y += e.Delta / 1200f;
+
+        Redraw();
+
       } else {
-        ScrollbarV.Value -= e.Delta / 10;
+        // Scrolling does not require a Redraw() call, as scrolling will fire off a Scroll event which will then cause a redraw anyway.
+
+        // If Alt isn't down, we're scrolling/panning.
+        if( IsKeyDown( Keys.Control ) ) {
+          // If Ctrl is down, we're scrolling horizontally.
+          ScrollbarH.Value -= e.Delta / 10;
+        } else {
+          // If no modifier keys are down, we're scrolling vertically.
+          ScrollbarV.Value -= e.Delta / 10;
+        }
       }
 
       Refresh();
