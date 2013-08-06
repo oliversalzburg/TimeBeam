@@ -827,6 +827,25 @@ namespace TimeBeam {
 
       RedrawAndRefresh();
     }
+
+    /// <summary>
+    ///   Invoked when a key is released.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    protected override void OnKeyUp( KeyEventArgs e ) {
+      base.OnKeyUp( e );
+
+      if( e.KeyCode == Keys.A && IsKeyDown( Keys.Control ) ) {
+        // Ctrl+A - Select all
+        _selectedTracks.Clear();
+        foreach( ITimelineTrack track in _tracks ) {
+          _selectedTracks.Add( track );
+          track.Selected();
+        }
+        RedrawAndRefresh();
+      }
+    }
     #endregion
 
     #region Scrolling
