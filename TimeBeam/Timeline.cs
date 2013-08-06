@@ -809,6 +809,8 @@ namespace TimeBeam {
     /// <param name="e"></param>
     private void TimelineMouseWheel( object sender, MouseEventArgs e ) {
       if( IsKeyDown( Keys.Alt ) ) {
+        // Zooming does not require a Redraw() call, as scrolling will fire off a Scroll event which will then cause a redraw anyway.
+
         // If Alt is down, we're zooming.
         float amount = e.Delta / 1200f;
         Rectangle trackAreaBounds = GetTrackAreaBounds();
@@ -821,6 +823,9 @@ namespace TimeBeam {
           _renderingOffset.X -= trackAreaBounds.Width * ( ( e.Location.X - trackAreaBounds.X ) / (float)trackAreaBounds.Width ) * amount;
           _renderingOffset.X = Math.Min( 0, _renderingOffset.X );
 
+          // Update scrollbar position.
+          ScrollbarH.Value = (int)( -_renderingOffset.X );
+          
         } else {
           // If Ctrl isn't  down, we're zooming vertically.
           _renderingScale.Y += amount;
@@ -828,9 +833,10 @@ namespace TimeBeam {
           // We now also need to move the rendering offset so that the center of focus stays at the mouse cursor.
           _renderingOffset.Y -= trackAreaBounds.Height * ( ( e.Location.Y - trackAreaBounds.Y ) / (float)trackAreaBounds.Height ) * amount;
           _renderingOffset.Y = Math.Min( 0, _renderingOffset.Y );
-        }
 
-        Redraw();
+          // Update scrollbar position.
+          ScrollbarV.Value = (int)( -_renderingOffset.Y );
+        }
 
       } else {
         // Scrolling does not require a Redraw() call, as scrolling will fire off a Scroll event which will then cause a redraw anyway.
