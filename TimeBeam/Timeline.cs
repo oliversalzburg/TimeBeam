@@ -80,6 +80,11 @@ namespace TimeBeam {
     ///   The font to use to draw the track labels.
     /// </summary>
     private Font _labelFont = DefaultFont;
+
+    /// <summary>
+    ///   The size of the top part of the playhead.
+    /// </summary>
+    private SizeF _playheadExtents = new SizeF( 5, 16 );
     #endregion
 
     #region Drawing
@@ -270,7 +275,7 @@ namespace TimeBeam {
       // Start after the track labels
       trackArea.X = TrackLabelWidth;
       // Start at the top (later, we'll deduct the playhead and time label height)
-      trackArea.Y = 0;
+      trackArea.Y = (int)_playheadExtents.Height;
       // Deduct scrollbar width.
       trackArea.Width = Width - ScrollbarV.Width;
       // Deduct scrollbar height.
@@ -291,7 +296,7 @@ namespace TimeBeam {
       int trackIndex = TrackIndexForTrack( track );
       int actualRowHeight = (int)( ( TrackHeight + TrackSpacing ) * _renderingScale.Y );
       // Calculate the Y offset for the track.
-      int trackOffsetY = (int)( ( actualRowHeight * trackIndex + _renderingOffset.Y ) );
+      int trackOffsetY = (int)( trackAreaBounds.Y + ( actualRowHeight * trackIndex ) + _renderingOffset.Y );
 
       // Calculate the X offset for track.
       int trackOffsetX = (int)( trackAreaBounds.X + ( track.Start * _renderingScale.X ) + _renderingOffset.X );
@@ -391,7 +396,7 @@ namespace TimeBeam {
 
       // Draw horizontal grid.
       // Calculate the Y position of the first line.
-      int firstLineY = (int)( ( TrackHeight ) * _renderingScale.Y + _renderingOffset.Y );
+      int firstLineY = (int)( TrackHeight * _renderingScale.Y + trackAreaBounds.Y + _renderingOffset.Y );
       // Calculate the distance between each following line.
       int actualRowHeight = (int)( ( TrackHeight + TrackSpacing ) * _renderingScale.Y );
       actualRowHeight = Math.Max( 1, actualRowHeight );
@@ -492,6 +497,10 @@ namespace TimeBeam {
       if( null != Clock ) {
         // Calculate the position of the playhead.
         Rectangle trackAreaBounds = GetTrackAreaBounds();
+
+        // Draw a background for the playhead. This also overdraws elements that drew into the playhead area.
+        GraphicsContainer.FillRectangle( Brushes.Black, 0, 0, Width, _playheadExtents.Height );
+
         float playheadOffset = (float)( trackAreaBounds.X + ( Clock.Value * 0.001f ) ) + _renderingOffset.X;
         // Don't draw when not in view.
         if( playheadOffset < trackAreaBounds.X || playheadOffset > trackAreaBounds.X + trackAreaBounds.Width ) {
@@ -500,6 +509,8 @@ namespace TimeBeam {
 
         // Draw the playhead as a single line.
         GraphicsContainer.DrawLine( Pens.SpringGreen, playheadOffset, trackAreaBounds.Y, playheadOffset, trackAreaBounds.Height );
+
+        GraphicsContainer.FillRectangle( Brushes.SpringGreen, playheadOffset - _playheadExtents.Width / 2, 0, _playheadExtents.Width, _playheadExtents.Height );
       }
     }
 
