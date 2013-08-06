@@ -757,7 +757,12 @@ namespace TimeBeam {
     /// <param name="sender"></param>
     /// <param name="e"></param>
     private void TimelineMouseWheel( object sender, MouseEventArgs e ) {
-      ScrollbarV.Value -= e.Delta / 10;
+      if( ( ModifierKeys & Keys.Control ) != 0 ) {
+        ScrollbarH.Value -= e.Delta / 10;
+      } else {
+        ScrollbarV.Value -= e.Delta / 10;
+      }
+
       Refresh();
     }
     #endregion
