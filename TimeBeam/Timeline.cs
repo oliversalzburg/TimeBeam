@@ -673,7 +673,13 @@ namespace TimeBeam {
         // Now apply the delta to the rendering offsets to pan the view.
         _renderingOffset = PointF.Add( _renderingOffsetBeforePan, new SizeF( delta ) );
 
-        RedrawAndRefresh();
+        // Make sure to stay within bounds.
+        _renderingOffset.X = Math.Max( -ScrollbarH.Max, Math.Min( 0, _renderingOffset.X ) );
+        _renderingOffset.Y = Math.Max( -ScrollbarV.Max, Math.Min( 0, _renderingOffset.Y ) );
+        
+        // Update scrollbar positions. This will invoke a redraw.
+        ScrollbarH.Value = (int)( -_renderingOffset.X );
+        ScrollbarV.Value = (int)( -_renderingOffset.Y );
 
       } else {
         // No mouse button is being pressed
