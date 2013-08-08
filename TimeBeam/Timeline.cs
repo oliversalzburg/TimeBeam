@@ -667,7 +667,7 @@ namespace TimeBeam {
             float length = selectedTrack.SubstituteFor.End - selectedTrack.SubstituteFor.Start;
 
             // Calculate the proposed new start for the track depending on the given delta.
-            float proposedStart = selectedTrack.SubstituteFor.Start + ( delta.X * ( 1 / _renderingScale.X ) );
+            float proposedStart = Math.Max( 0, selectedTrack.SubstituteFor.Start + ( delta.X * ( 1 / _renderingScale.X ) ) );
             // Get the index of the selected track to use it as a basis for calculating the proposed new bounding box.
             int trackIndex = TrackIndexForTrack( selectedTrack );
             // Use the calculated valued to get a full screen-space bounding box for the proposed track location.
@@ -692,7 +692,6 @@ namespace TimeBeam {
 
               RectangleF boundingRectangle = BoundsHelper.GetTrackExtents( track, this );
 
-              // Check if the track item is selected by the selection rectangle.
               if( proposed.IntersectsWith( boundingRectangle ) ) {
                 // Where did we intersect?
                 float boundingRectangleCenter = boundingRectangle.X + boundingRectangle.Width / 2;
@@ -704,6 +703,20 @@ namespace TimeBeam {
                 } else {
                   proposedStart = track.End;
                 }
+
+                // Don't snap before the start of time.
+                proposedStart = Math.Max( 0, proposedStart );
+
+                // Construct a new bounding rectangle based on the snapped values.
+                RectangleF newProposed = BoundsHelper.RectangleToTrackExtents(
+                  new RectangleF {
+                    X = proposedStart,
+                    Width = length,
+                  }, this, trackIndex );
+
+                // If the new proposed rectangle intersects with any other track element, the snapping approach failed.
+                if( BoundsHelper.IntersectsAny( newProposed, _tracks[ trackIndex ].TrackElements.Select( t => BoundsHelper.GetTrackExtents( t, this ) ) ) ) return;
+
                 break;
               }
             }
@@ -742,7 +755,7 @@ namespace TimeBeam {
             // Apply the delta to the start or end of the timeline track,
             // depending on the edge where the user originally started the resizing operation.
             if( ( _activeEdge & RectangleHelper.Edge.Left ) != 0 ) {
-              proposedStart += ( delta.X * ( 1 / _renderingScale.X ) );
+              proposedStart = Math.Max( 0, proposedStart + delta.X * ( 1 / _renderingScale.X ) );
               proposedSeed.X = proposedStart;
               proposedSeed.Width = proposedEnd - proposedStart;
 
@@ -763,10 +776,26 @@ namespace TimeBeam {
 
               RectangleF boundingRectangle = BoundsHelper.GetTrackExtents( track, this );
 
-              // Check if the track item is selected by the selection rectangle.
               if( proposed.IntersectsWith( boundingRectangle ) ) {
-                // TODO: Snap to collision subject
-                return;
+                
+                // Where did we intersect?
+                if( boundingRectangle.Contains( proposed.Right, boundingRectangle.Y ) ) {
+                  proposedEnd = track.Start;
+                } else if( boundingRectangle.Contains( proposed.Left, boundingRectangle.Y ) ) {
+                  proposedStart = track.End;
+                }
+
+                // Construct a new bounding rectangle based on the snapped values.
+                RectangleF newProposed = BoundsHelper.RectangleToTrackExtents(
+                  new RectangleF {
+                    X = proposedStart,
+                    Width = proposedEnd - proposedStart,
+                  }, this, trackIndex );
+
+                // If the new proposed rectangle intersects with any other track element, the snapping approach failed.
+                if( BoundsHelper.IntersectsAny( newProposed, _tracks[ trackIndex ].TrackElements.Select( t => BoundsHelper.GetTrackExtents( t, this ) ) ) ) return;
+
+                break;
               }
             }
 

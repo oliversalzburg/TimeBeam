@@ -1,4 +1,6 @@
-﻿using System.Drawing;
+﻿using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
 
 namespace TimeBeam.Helper {
   internal static class BoundsHelper {
@@ -6,8 +8,7 @@ namespace TimeBeam.Helper {
     ///   Calculate the bounding rectangle for a track in screen-space.
     /// </summary>
     /// <param name="track">
-    ///   The track for which to calculate the bounding
-    ///   rectangle.
+    ///   The track for which to calculate the bounding rectangle.
     /// </param>
     /// <param name="timeline">The timeline the track lives on.</param>
     /// <returns>The bounding rectangle for the given track.</returns>
@@ -36,6 +37,18 @@ namespace TimeBeam.Helper {
       // The extent of the track, including the border
       RectangleF trackExtent = new RectangleF( trackOffsetX, trackOffsetY, rect.Width * timeline.RenderingScale.X, timeline.TrackHeight * timeline.RenderingScale.Y );
       return trackExtent;
+    }
+
+    /// <summary>
+    ///   Checks if a given rectangle intersects with any of the target rectangles.
+    /// </summary>
+    /// <param name="test">The rectangle that should be tested against the other rectangles.</param>
+    /// <param name="subjects">The "other" rectangles.</param>
+    /// <returns>
+    ///   <see langword="true" /> if there is an intersection; <see langword="false" /> otherwise
+    /// </returns>
+    internal static bool IntersectsAny( RectangleF test, IEnumerable<RectangleF> subjects ) {
+      return subjects.Any( subject => subject.IntersectsWith( test ) );
     }
   }
 }
