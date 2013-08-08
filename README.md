@@ -13,6 +13,7 @@ A timeline control for .NET (which is still under development).
                   | <kbd>Ctrl</kbd> | <kbd>Alt</kbd> | **MouseWheel** | Zoom horizontally
                   |                 |                | **Middle**     | Pan
                   | <kbd>Ctrl</kbd> |                | <kbd>A</kbd>   | Select all
+                  | <kbd>Ctrl</kbd> |                | <kbd>D</kbd>   | Deselect all
 
 ### Selection
 By default, anything that *intersects* with the selection rectangle is selected.  

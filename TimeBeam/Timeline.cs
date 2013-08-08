@@ -1032,6 +1032,10 @@ namespace TimeBeam {
           track.Selected();
         }
         RedrawAndRefresh();
+
+      } else if( e.KeyCode == Keys.D && IsKeyDown( Keys.Control ) ) {
+        _selectedTracks.Clear();
+        RedrawAndRefresh();
       }
     }
     #endregion
