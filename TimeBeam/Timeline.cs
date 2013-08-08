@@ -641,13 +641,13 @@ namespace TimeBeam {
       // Check if there is a track at the current mouse position.
       ITimelineTrack focusedTrack = TrackHitTest( location );
 
+      Rectangle trackAreaBounds = GetTrackAreaBounds();
+
       // Is the left mouse button pressed?
       if( ( e.Button & MouseButtons.Left ) != 0 ) {
         if( CurrentMode == BehaviorMode.MovingSelection ) {
           // Indicate ability to move though cursor.
           Cursor = Cursors.SizeWE;
-
-          Rectangle trackAreaBounds = GetTrackAreaBounds();
 
           foreach( TrackSurrogate selectedTrack in _trackSurrogates ) {
             // Calculate the movement delta.
@@ -666,6 +666,7 @@ namespace TimeBeam {
               Height = trackExtents.Height
             };
 
+            // Now perform collision detection against other elements on the timeline.
             // We only want to check against elements that are on the same track.
             int trackIndex = TrackIndexForTrack( selectedTrack );
 
@@ -701,13 +702,48 @@ namespace TimeBeam {
           foreach( TrackSurrogate selectedTrack in _trackSurrogates ) {
             // Calculate the movement delta.
             PointF delta = PointF.Subtract( location, new SizeF( _dragOrigin ) );
+            float length = selectedTrack.SubstituteFor.End - selectedTrack.SubstituteFor.Start;
+
+            RectangleF trackExtents = GetTrackExtents( selectedTrack.SubstituteFor );
+            RectangleF proposed = new RectangleF {
+              X = selectedTrack.SubstituteFor.Start,
+              Y = trackExtents.Y,
+              Width = length,
+              Height = trackExtents.Height
+            };
+
             // Apply the delta to the start or end of the timeline track,
             // depending on the edge where the user originally started the resizing operation.
             if( ( _activeEdge & RectangleHelper.Edge.Left ) != 0 ) {
-              selectedTrack.Start = selectedTrack.SubstituteFor.Start + ( delta.X * ( 1 / _renderingScale.X ) );
+              proposed.X = selectedTrack.SubstituteFor.Start + ( delta.X * ( 1 / _renderingScale.X ) );
+              proposed.Width = selectedTrack.SubstituteFor.End - proposed.X;
             } else if( ( _activeEdge & RectangleHelper.Edge.Right ) != 0 ) {
-              selectedTrack.End = selectedTrack.SubstituteFor.End + ( delta.X * ( 1 / _renderingScale.X ) );
+              proposed.Width = length + ( delta.X * ( 1 / _renderingScale.X ) );
             }
+
+            // Now perform collision detection against other elements on the timeline.
+            // We only want to check against elements that are on the same track.
+            int trackIndex = TrackIndexForTrack( selectedTrack );
+
+            foreach( ITimelineTrack track in _tracks[ trackIndex ] ) {
+              if( track == selectedTrack.SubstituteFor ) {
+                continue;
+              }
+
+              RectangleF boundingRectangle = GetTrackExtents( track );
+              // Bring the proposed rectangle into global space.
+              RectangleF proposedBounds = proposed;
+              proposedBounds.Offset( trackAreaBounds.X, trackAreaBounds.Y );
+
+              // Check if the track item is selected by the selection rectangle.
+              if( proposedBounds.IntersectsWith( boundingRectangle ) ) {
+                Debug.WriteLine( "Intersects with " + track.Name );
+                return;
+              }
+            }
+
+            selectedTrack.Start = proposed.Left;
+            selectedTrack.End = proposed.Right;
           }
 
           // Force a redraw.
