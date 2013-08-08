@@ -14,6 +14,12 @@ namespace TimeBeam {
   ///   The main host control.
   /// </summary>
   public partial class Timeline : Control {
+    /// <summary>
+    ///   How far does the user have to move the mouse (while holding down the left mouse button) until dragging operations kick in?
+    ///   Technically, this defines the length of the movement vector.
+    /// </summary>
+    private const float DraggingThreshold = 3f;
+
     #region Layout
     /// <summary>
     ///   How high a single track should be.
@@ -246,7 +252,17 @@ namespace TimeBeam {
       /// <summary>
       ///   The user is resizing the selected tracks.
       /// </summary>
-      ResizingSelection
+      ResizingSelection,
+
+      /// <summary>
+      ///   The user is almost moving selected items.
+      /// </summary>
+      RequestMovingSelection,
+
+      /// <summary>
+      ///   The user is almost resizing the selected tracks.
+      /// </summary>
+      RequestResizingSelection,
     }
     #endregion
 
@@ -643,9 +659,10 @@ namespace TimeBeam {
           // Indicate ability to move though cursor.
           Cursor = Cursors.SizeWE;
 
+          // Calculate the movement delta.
+          PointF delta = PointF.Subtract( location, new SizeF( _dragOrigin ) );
+
           foreach( TrackSurrogate selectedTrack in _trackSurrogates ) {
-            // Calculate the movement delta.
-            PointF delta = PointF.Subtract( location, new SizeF( _dragOrigin ) );
             // Store the length of this track
             float length = selectedTrack.SubstituteFor.End - selectedTrack.SubstituteFor.Start;
 
@@ -694,9 +711,11 @@ namespace TimeBeam {
           // Indicate ability to resize though cursor.
           Cursor = Cursors.SizeWE;
 
+          // Calculate the movement delta.
+          PointF delta = PointF.Subtract( location, new SizeF( _dragOrigin ) );
+
           foreach( TrackSurrogate selectedTrack in _trackSurrogates ) {
-            // Calculate the movement delta.
-            PointF delta = PointF.Subtract( location, new SizeF( _dragOrigin ) );
+
             // Store the length of this track
             float length = selectedTrack.SubstituteFor.End - selectedTrack.SubstituteFor.Start;
 
@@ -761,6 +780,25 @@ namespace TimeBeam {
           _selectionRectangle = RectangleHelper.Normalize( _selectionOrigin, location ).ToRectangle();
 
           RedrawAndRefresh();
+
+        } else if( CurrentMode == BehaviorMode.RequestMovingSelection || CurrentMode == BehaviorMode.RequestResizingSelection ) {
+          // A previous action would like a dragging operation to start.
+
+          // Calculate the movement delta.
+          PointF delta = PointF.Subtract( location, new SizeF( _dragOrigin ) );
+
+          // Check if the user has moved the mouse far enough to trigger the dragging operation.
+          if( Math.Sqrt( delta.X * delta.X + delta.Y * delta.Y ) > DraggingThreshold ) {
+            // Start the requested dragging operation.
+            if( CurrentMode == BehaviorMode.RequestMovingSelection ) {
+              CurrentMode = BehaviorMode.MovingSelection;
+            } else if( CurrentMode == BehaviorMode.RequestResizingSelection ) {
+              CurrentMode = BehaviorMode.ResizingSelection;
+            }
+
+            // Create and store surrogates for selected timeline tracks.
+            _trackSurrogates = SurrogateHelper.GetSurrogates( _selectedTracks );
+          }
         }
 
       } else if( ( e.Button & MouseButtons.Middle ) != 0 ) {
@@ -836,23 +874,31 @@ namespace TimeBeam {
           if( !_selectedTracks.Contains( focusedTrack ) ) {
             // Tell the track that it was selected.
             focusedTrack.Selected();
-            // Store a reference to the selected track
-            _selectedTracks.Clear();
+            // Clear the selection, unless the user is picking
+            if( !IsKeyDown( Keys.Control ) ) {
+              _selectedTracks.Clear();
+            }
+
+            // Add track to selection
             _selectedTracks.Add( focusedTrack );
+
+            // If the track was already selected and Ctrl is down
+            // then the user is picking and we want to remove the track from the selection
+          } else if( IsKeyDown( Keys.Control ) ) {
+            _selectedTracks.Remove( focusedTrack );
           }
+
           // Store the current mouse position. It'll be used later to calculate the movement delta.
           _dragOrigin = location;
-          // Create and store surrogates for selected timeline tracks.
-          _trackSurrogates = SurrogateHelper.GetSurrogates( _selectedTracks );
 
           // Check whether the user wants to move or resize the selected tracks.
           RectangleF trackExtents = BoundsHelper.GetTrackExtents( focusedTrack, this );
           RectangleHelper.Edge isPointOnEdge = RectangleHelper.IsPointOnEdge( trackExtents, location, 3f, RectangleHelper.EdgeTest.Horizontal );
           if( isPointOnEdge != RectangleHelper.Edge.None ) {
-            CurrentMode = BehaviorMode.ResizingSelection;
+            CurrentMode = BehaviorMode.RequestResizingSelection;
             _activeEdge = isPointOnEdge;
           } else {
-            CurrentMode = BehaviorMode.MovingSelection;
+            CurrentMode = BehaviorMode.RequestMovingSelection;
           }
 
         } else {

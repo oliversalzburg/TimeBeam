@@ -9,7 +9,7 @@ namespace TimeBeam.Helper {
     /// <summary>
     ///   Check if a given rectangle would be selected by another rectangle.
     ///   By default, checks whether the selection rectangle intersects with the bounding rectangle.
-    ///   If Ctrl is pressed, the selection rectangle has to contain the complete bounding rectangle.
+    ///   If Alt is pressed, the selection rectangle has to contain the complete bounding rectangle.
     /// </summary>
     /// <param name="selectionRectangle">The rectangle that represents the selection.</param>
     /// <param name="boundingRectangle">The rectangle that should be tested whether it is selected.</param>
@@ -18,7 +18,7 @@ namespace TimeBeam.Helper {
     ///   <see langword="true" /> if the rectangle is selected; <see langword="false" /> otherwise.
     /// </returns>
     public static bool IsSelected( RectangleF selectionRectangle, RectangleF boundingRectangle, Keys modifierKeys ) {
-      if( ( modifierKeys & Keys.Control ) != 0 ) {
+      if( ( modifierKeys & Keys.Alt ) != 0 ) {
         return selectionRectangle.Contains( boundingRectangle );
       } else {
         return selectionRectangle.IntersectsWith( boundingRectangle );
