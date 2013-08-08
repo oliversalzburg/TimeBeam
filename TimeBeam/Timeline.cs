@@ -866,7 +866,7 @@ namespace TimeBeam {
       if( e.KeyCode == Keys.A && IsKeyDown( Keys.Control ) ) {
         // Ctrl+A - Select all
         _selectedTracks.Clear();
-        foreach( ITimelineTrack track in _tracks ) {
+        foreach( ITimelineTrack track in _tracks.SelectMany( t => t ) ) {
           _selectedTracks.Add( track );
           track.Selected();
         }
