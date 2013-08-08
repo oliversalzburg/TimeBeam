@@ -694,8 +694,17 @@ namespace TimeBeam {
 
               // Check if the track item is selected by the selection rectangle.
               if( proposed.IntersectsWith( boundingRectangle ) ) {
-                // TODO: Snap to collision subject
-                return;
+                // Where did we intersect?
+                float boundingRectangleCenter = boundingRectangle.X + boundingRectangle.Width / 2;
+                float proposedCenter = proposed.X + proposed.Width / 2;
+                // If our proposed rectangle is on the left side of the center of the rectangle we intersect with, snap to the left.
+                // If we're on the right side of the center, snap to the right.
+                if( boundingRectangleCenter - proposedCenter > 0 ) {
+                  proposedStart = track.Start - length;
+                } else {
+                  proposedStart = track.End;
+                }
+                break;
               }
             }
 
