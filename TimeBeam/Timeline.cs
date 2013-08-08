@@ -114,11 +114,13 @@ namespace TimeBeam {
     /// </summary>
     private Color _backgroundColor = Color.Black;
 
+    internal PointF RenderingOffset { get { return _renderingOffset; } }
     /// <summary>
     ///   When the timeline is scrolled (panned) around, this offset represents the panned distance.
     /// </summary>
     private PointF _renderingOffset = PointF.Empty;
 
+    internal PointF RenderingScale { get { return _renderingScale; } }
     /// <summary>
     ///   The scale at which to render the timeline.
     ///   This enables us to "zoom" the timeline in and out.
@@ -302,7 +304,7 @@ namespace TimeBeam {
     ///   Calculate the rectangle within which track should be drawn.
     /// </summary>
     /// <returns>The rectangle within which all tracks should be drawn.</returns>
-    private Rectangle GetTrackAreaBounds() {
+    internal Rectangle GetTrackAreaBounds() {
       Rectangle trackArea = new Rectangle();
 
       // Start after the track labels
@@ -317,27 +319,7 @@ namespace TimeBeam {
       return trackArea;
     }
 
-    /// <summary>
-    ///   Calculate the bounding rectangle for a track.
-    /// </summary>
-    /// <param name="track">The track for which to calculate the bounding rectangle.</param>
-    /// <returns>The bounding rectangle for the given track.</returns>
-    private RectangleF GetTrackExtents( ITimelineTrack track ) {
-      Rectangle trackAreaBounds = GetTrackAreaBounds();
 
-      // The index of this track (or the one it's a substitute for).
-      int trackIndex = TrackIndexForTrack( track );
-      int actualRowHeight = (int)( ( TrackHeight + TrackSpacing ) * _renderingScale.Y );
-      // Calculate the Y offset for the track.
-      int trackOffsetY = (int)( trackAreaBounds.Y + ( actualRowHeight * trackIndex ) + _renderingOffset.Y );
-
-      // Calculate the X offset for track.
-      int trackOffsetX = (int)( trackAreaBounds.X + ( track.Start * _renderingScale.X ) + _renderingOffset.X );
-
-      // The extent of the track, including the border
-      RectangleF trackExtent = new RectangleF( trackOffsetX, trackOffsetY, ( track.End - track.Start ) * _renderingScale.X, TrackHeight * _renderingScale.Y );
-      return trackExtent;
-    }
 
     /// <summary>
     ///   Check if a track is located at the given position.
@@ -349,7 +331,7 @@ namespace TimeBeam {
     private ITimelineTrack TrackHitTest( PointF test ) {
       foreach( ITimelineTrack track in _tracks.SelectMany( t => t.TrackElements ) ) {
         // The extent of the track, including the border
-        RectangleF trackExtent = GetTrackExtents( track );
+        RectangleF trackExtent = BoundsHelper.GetTrackExtents( track, this, TrackIndexForTrack( track ) );
 
         if( trackExtent.Contains( test ) ) {
           return track;
@@ -505,7 +487,7 @@ namespace TimeBeam {
 
       foreach( ITimelineTrack track in tracks ) {
         // The extent of the track, including the border
-        RectangleF trackExtent = GetTrackExtents( track );
+        RectangleF trackExtent = BoundsHelper.GetTrackExtents( track, this, TrackIndexForTrack( track ) );
 
         // Don't draw track elements that aren't within the target area.
         if( !trackAreaBounds.IntersectsWith( trackExtent.ToRectangle() ) ) {
@@ -545,8 +527,9 @@ namespace TimeBeam {
     ///   Draw the labels next to each track.
     /// </summary>
     private void DrawTrackLabels() {
-      foreach( ITimelineTrack track in _tracks.SelectMany( t => t.TrackElements ) ) {
-        RectangleF trackExtents = GetTrackExtents( track );
+      foreach( IMultiPartTimelineTrack track in _tracks ) {
+        // We just need the height and Y-offset, so we get the extents of the first track
+        RectangleF trackExtents = BoundsHelper.GetTrackExtents( track.TrackElements.First(), this, TrackIndexForTrack( track.TrackElements.First() ) );
         RectangleF labelRect = new RectangleF( 0, trackExtents.Y, TrackLabelWidth, trackExtents.Height );
         GraphicsContainer.FillRectangle( new SolidBrush( Color.FromArgb( 50, 50, 50 ) ), labelRect );
         GraphicsContainer.DrawString( track.Name, _labelFont, Brushes.LightGray, labelRect );
@@ -661,23 +644,21 @@ namespace TimeBeam {
           foreach( TrackSurrogate selectedTrack in _trackSurrogates ) {
             // Calculate the movement delta.
             PointF delta = PointF.Subtract( location, new SizeF( _dragOrigin ) );
-            float length = selectedTrack.End - selectedTrack.Start;
+            float length = selectedTrack.SubstituteFor.End - selectedTrack.SubstituteFor.Start;
 
-            RectangleF trackExtents = GetTrackExtents( selectedTrack );
+            RectangleF trackExtents = BoundsHelper.GetTrackExtents( selectedTrack.SubstituteFor, this, TrackIndexForTrack( selectedTrack.SubstituteFor ) );
 
-            // Then apply the delta to the track.
-            // For that, we first get the original position from the original (non-surrogate) item and
-            // then apply the delta to that value to get the offset for the surrogate.
-            RectangleF proposed = new RectangleF {
-              X = selectedTrack.SubstituteFor.Start + ( delta.X * ( 1 / _renderingScale.X ) ),
-              Y = trackExtents.Y,
-              Width = length,
-              Height = trackExtents.Height
-            };
-
-            // Now perform collision detection against other elements on the timeline.
-            // We only want to check against elements that are on the same track.
+            float proposedStart = selectedTrack.SubstituteFor.Start + ( delta.X * ( 1 / _renderingScale.X ) );
+            
             int trackIndex = TrackIndexForTrack( selectedTrack );
+
+            RectangleF proposed = BoundsHelper.RectangleToTrackExtents(
+              new RectangleF {
+                X = proposedStart,
+                Y = trackExtents.Y,
+                Width = length,
+                Height = trackExtents.Height
+              }, this, trackIndex );
 
             foreach( ITimelineTrack track in _tracks[ trackIndex ].TrackElements ) {
               // Don't check if the track intersects with itself.
@@ -691,12 +672,11 @@ namespace TimeBeam {
                 continue;
               }
 
-              RectangleF boundingRectangle = GetTrackExtents( track );
+              RectangleF boundingRectangle = BoundsHelper.GetTrackExtents( track, this, TrackIndexForTrack( track ) );
 
               // Bring the proposed rectangle into global space.
               RectangleF proposedBounds = proposed;
-              proposedBounds.Offset( trackAreaBounds.X, trackAreaBounds.Y );
-
+              
               // Check if the track item is selected by the selection rectangle.
               if( proposedBounds.IntersectsWith( boundingRectangle ) ) {
                 Debug.WriteLine( "Intersects with " + track.Name );
@@ -704,8 +684,8 @@ namespace TimeBeam {
               }
             }
 
-            selectedTrack.Start = proposed.Left;
-            selectedTrack.End = proposed.Right;
+            selectedTrack.Start = proposedStart;
+            selectedTrack.End = proposedStart + length;
           }
 
           // Force a redraw.
@@ -720,8 +700,14 @@ namespace TimeBeam {
             PointF delta = PointF.Subtract( location, new SizeF( _dragOrigin ) );
             float length = selectedTrack.SubstituteFor.End - selectedTrack.SubstituteFor.Start;
 
-            RectangleF trackExtents = GetTrackExtents( selectedTrack.SubstituteFor );
-            RectangleF proposed = new RectangleF {
+            int trackIndex = TrackIndexForTrack( selectedTrack );
+
+            RectangleF trackExtents = BoundsHelper.GetTrackExtents( selectedTrack.SubstituteFor, this, TrackIndexForTrack( selectedTrack.SubstituteFor ) );
+
+            float proposedStart = selectedTrack.SubstituteFor.Start;
+            float proposedEnd = selectedTrack.SubstituteFor.End;
+
+            RectangleF proposedSeed = new RectangleF() {
               X = selectedTrack.SubstituteFor.Start,
               Y = trackExtents.Y,
               Width = length,
@@ -731,35 +717,32 @@ namespace TimeBeam {
             // Apply the delta to the start or end of the timeline track,
             // depending on the edge where the user originally started the resizing operation.
             if( ( _activeEdge & RectangleHelper.Edge.Left ) != 0 ) {
-              proposed.X = selectedTrack.SubstituteFor.Start + ( delta.X * ( 1 / _renderingScale.X ) );
-              proposed.Width = selectedTrack.SubstituteFor.End - proposed.X;
+              proposedStart += ( delta.X * ( 1 / _renderingScale.X ) );
+              proposedSeed.X = proposedStart;
+              proposedSeed.Width = proposedEnd - proposedStart;
             } else if( ( _activeEdge & RectangleHelper.Edge.Right ) != 0 ) {
-              proposed.Width = length + ( delta.X * ( 1 / _renderingScale.X ) );
+              proposedEnd += ( delta.X * ( 1 / _renderingScale.X ) );
+              proposedSeed.Width = proposedEnd - proposedStart;
             }
 
-            // Now perform collision detection against other elements on the timeline.
-            // We only want to check against elements that are on the same track.
-            int trackIndex = TrackIndexForTrack( selectedTrack );
+            RectangleF proposed = BoundsHelper.RectangleToTrackExtents(proposedSeed,this,trackIndex);
 
             foreach( ITimelineTrack track in _tracks[ trackIndex ].TrackElements ) {
               if( track == selectedTrack.SubstituteFor ) {
                 continue;
               }
 
-              RectangleF boundingRectangle = GetTrackExtents( track );
-              // Bring the proposed rectangle into global space.
-              RectangleF proposedBounds = proposed;
-              proposedBounds.Offset( trackAreaBounds.X, trackAreaBounds.Y );
-
+              RectangleF boundingRectangle = BoundsHelper.GetTrackExtents( track, this, TrackIndexForTrack( track ) );
+              
               // Check if the track item is selected by the selection rectangle.
-              if( proposedBounds.IntersectsWith( boundingRectangle ) ) {
-                Debug.WriteLine( "Intersects with " + track.Name );
+              if( proposed.IntersectsWith( boundingRectangle ) ) {
+                //Debug.WriteLine( "Intersects with " + track.Name );
                 return;
               }
             }
 
-            selectedTrack.Start = proposed.Left;
-            selectedTrack.End = proposed.Right;
+            selectedTrack.Start = proposedStart;
+            selectedTrack.End = proposedEnd;
           }
 
           // Force a redraw.
@@ -797,7 +780,7 @@ namespace TimeBeam {
       } else {
         // No mouse button is being pressed
         if( null != focusedTrack ) {
-          RectangleF trackExtents = GetTrackExtents( focusedTrack );
+          RectangleF trackExtents = BoundsHelper.GetTrackExtents( focusedTrack, this, TrackIndexForTrack( focusedTrack ) );
           RectangleHelper.Edge isPointOnEdge = RectangleHelper.IsPointOnEdge( trackExtents, location, 3f, RectangleHelper.EdgeTest.Horizontal );
 
           // Select the appropriate size cursor for the cursor position.
@@ -862,7 +845,7 @@ namespace TimeBeam {
           _trackSurrogates = SurrogateHelper.GetSurrogates( _selectedTracks );
 
           // Check whether the user wants to move or resize the selected tracks.
-          RectangleF trackExtents = GetTrackExtents( focusedTrack );
+          RectangleF trackExtents = BoundsHelper.GetTrackExtents( focusedTrack, this, TrackIndexForTrack( focusedTrack ) );
           RectangleHelper.Edge isPointOnEdge = RectangleHelper.IsPointOnEdge( trackExtents, location, 3f, RectangleHelper.EdgeTest.Horizontal );
           if( isPointOnEdge != RectangleHelper.Edge.None ) {
             CurrentMode = BehaviorMode.ResizingSelection;
@@ -906,7 +889,7 @@ namespace TimeBeam {
           RectangleF selectionRectangle = RectangleHelper.Normalize( _selectionOrigin, location );
 
           foreach( ITimelineTrack track in _tracks.SelectMany( t => t.TrackElements ) ) {
-            RectangleF boundingRectangle = GetTrackExtents( track );
+            RectangleF boundingRectangle = BoundsHelper.GetTrackExtents( track, this, TrackIndexForTrack( track ) );
 
             // Check if the track item is selected by the selection rectangle.
             if( SelectionHelper.IsSelected( selectionRectangle, boundingRectangle, ModifierKeys ) ) {

@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Helper\BoundsHelper.cs" />
     <Compile Include="Helper\ColorHelper.cs" />
     <Compile Include="Helper\Extensions.cs" />
     <Compile Include="Helper\RectangleHelper.cs" />
