@@ -432,6 +432,9 @@ namespace TimeBeam {
       Rectangle trackAreaBounds = GetTrackAreaBounds();
 
       // Draw horizontal grid.
+      // Premultiply with alpha to improve drawing speed.
+      int gridPenColor = (int)( 255 * GridAlpha / 255f );
+      Pen gridPen = new Pen( Color.FromArgb( gridPenColor, gridPenColor, gridPenColor ) );
       // Calculate the Y position of the first line.
       int firstLineY = (int)( TrackHeight * _renderingScale.Y + trackAreaBounds.Y + _renderingOffset.Y );
       // Calculate the distance between each following line.
@@ -439,10 +442,10 @@ namespace TimeBeam {
       actualRowHeight = Math.Max( 1, actualRowHeight );
       // Draw the actual lines.
       for( int y = firstLineY; y < Height; y += actualRowHeight ) {
-        GraphicsContainer.DrawLine( new Pen( Color.FromArgb( GridAlpha, Color.White ) ), trackAreaBounds.X, y, trackAreaBounds.Width, y );
+        GraphicsContainer.DrawLine( gridPen, trackAreaBounds.X, y, trackAreaBounds.Width, y );
       }
 
-      // The dinstance between the minor ticks.
+      // The distance between the minor ticks.
       float minorTickDistance = _renderingScale.X;
       int minorTickOffset = (int)( _renderingOffset.X % minorTickDistance );
 
@@ -463,24 +466,33 @@ namespace TimeBeam {
 
       // Should we draw minor ticks?
       if( minorTickDistance > 2.0f ) {
-        for( float x = minorTickOffset; x < Width; x += minorTickDistance ) {
-          GraphicsContainer.DrawLine(
-            new Pen( Color.FromArgb( 30, Color.White ) ) {
-              DashStyle = DashStyle.Dot
-            }, trackAreaBounds.X + x, trackAreaBounds.Y, trackAreaBounds.X + x, trackAreaBounds.Height );
+        using( Pen minorGridPen = new Pen( Color.FromArgb( 30, Color.White ) ) {
+          DashStyle = DashStyle.Dot
+        } ) {
+          for( float x = minorTickOffset; x < Width; x += minorTickDistance ) {
+            GraphicsContainer.DrawLine( minorGridPen, trackAreaBounds.X + x, trackAreaBounds.Y, trackAreaBounds.X + x, trackAreaBounds.Height );
+          }
         }
       }
 
       // We start one tick distance after the offset to draw the first line that is actually in the display area
       // The one that is only tickOffset pixels away it behind the track labels.
+      int minutePenColor = (int)( 255 * Math.Min( 255, GridAlpha * 2 ) / 255f );
+      Pen brightPen = new Pen( Color.FromArgb( minutePenColor, minutePenColor, minutePenColor ) );
       for( int x = tickOffset + tickDistance; x < Width; x += columnWidth ) {
-        int alpha = GridAlpha;
         // Every 60 ticks, we put a brighter, thicker line.
+        Pen penToUse;
         if( ( x - minuteOffset ) % minuteDistance == 0 ) {
-          alpha = Math.Min( 255, alpha *= 2 );
+          penToUse = brightPen;
+        } else {
+          penToUse = gridPen;
         }
-        GraphicsContainer.DrawLine( new Pen( Color.FromArgb( alpha, Color.White ) ), trackAreaBounds.X + x, trackAreaBounds.Y, trackAreaBounds.X + x, trackAreaBounds.Height );
+        
+        GraphicsContainer.DrawLine( penToUse, trackAreaBounds.X + x, trackAreaBounds.Y, trackAreaBounds.X + x, trackAreaBounds.Height );
       }
+
+      gridPen.Dispose();
+      brightPen.Dispose();
     }
 
     /// <summary>
