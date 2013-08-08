@@ -902,8 +902,10 @@ namespace TimeBeam {
           }
 
         } else {
-          // Reset the track selection.
-          _selectedTracks.Clear();
+          // Clear the selection, unless the user is picking
+          if( !IsKeyDown( Keys.Control ) ) {
+            _selectedTracks.Clear();
+          }
 
           // Remember this location as the origin for the selection.
           _selectionOrigin = location;
@@ -940,8 +942,12 @@ namespace TimeBeam {
 
             // Check if the track item is selected by the selection rectangle.
             if( SelectionHelper.IsSelected( selectionRectangle, boundingRectangle, ModifierKeys ) ) {
-              // Add it to the selection.
-              _selectedTracks.Add( track );
+              // Toggle track in and out of selection.
+              if( _selectedTracks.Contains( track ) ) {
+                _selectedTracks.Remove( track );
+              } else {
+                _selectedTracks.Add( track );
+              }
             }
           }
 
