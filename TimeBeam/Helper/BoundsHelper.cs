@@ -1,20 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
+﻿using System.Drawing;
 
 namespace TimeBeam.Helper {
   internal static class BoundsHelper {
     /// <summary>
-    ///   Calculate the bounding rectangle for a track in global space.
+    ///   Calculate the bounding rectangle for a track in screen-space.
     /// </summary>
-    /// <param name="track">The track for which to calculate the bounding rectangle.</param>
+    /// <param name="track">
+    ///   The track for which to calculate the bounding
+    ///   rectangle.
+    /// </param>
+    /// <param name="timeline">The timeline the track lives on.</param>
     /// <returns>The bounding rectangle for the given track.</returns>
-    internal static RectangleF GetTrackExtents( ITimelineTrack track, Timeline timeline, int trackIndex ) {
+    internal static RectangleF GetTrackExtents( ITimelineTrack track, Timeline timeline ) {
+      int trackIndex = timeline.TrackIndexForTrack( track );
       return RectangleToTrackExtents( new RectangleF( track.Start, 0, track.End - track.Start, 0 ), timeline, trackIndex );
     }
 
+    /// <summary>
+    ///   Calculate the bounding rectangle in screen-space that would hold a track of the same extents as the given rectangle.
+    /// </summary>
+    /// <param name="rect">A rectangle which left and right edge represent the start and end of a track item. The top and bottom edge are ignored.</param>
+    /// <param name="timeline">The timeline the assumed track would live on. Used to determine the top and bottom edge of the bounding rectangle.</param>
+    /// <param name="assumedTrackIndex">The assumed index of the track. Used to determine the top edge of the bounding rectangle.</param>
+    /// <returns>A bounding rectangle that would hold a track of the same extents as the given rectangle.</returns>
     internal static RectangleF RectangleToTrackExtents( RectangleF rect, Timeline timeline, int assumedTrackIndex ) {
       Rectangle trackAreaBounds = timeline.GetTrackAreaBounds();
 
