@@ -12,10 +12,10 @@ namespace TimeBeam.Surrogates {
 
     private ITimelineTrack _wrappedTrack;
 
-    public string Name { get; set; }
+    public string Name { get { return _wrappedTrack.Name; } set { _wrappedTrack.Name = value; } }
 
     public void Selected() {
-      // Nothing to do
+      _wrappedTrack.Selected();
     }
 
     public SingleTrackToMultiTrackWrapper( ITimelineTrack track ) {

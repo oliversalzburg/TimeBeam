@@ -28,15 +28,14 @@ namespace TimeBeamTest {
         new AdjustMyLength{Start=520,End=650,Name="Rotation X"},
         new AdjustMyLength{Start=100,End=150,Name="Position Y"},
         new AdjustMyLength{Start=120,End=250,Name="Position Z"},
-        new AdjustMyLength{Start=320,End=650,Name="Alpha"},
-        new AdjustMyLength{Start=620,End=750,Name="Visible"}
+        new AdjustMyLength{Start=320,End=650,Name="Alpha"}
       };
 
       foreach( AdjustMyLength track in tracks ) {
         timeline1.AddTrack( track );
       }
 
-      timeline1.AddTrack( new  AdjustMyParts() );
+      timeline1.AddTrack( new  AdjustMyParts(){Name="Visible"} );
 
       // Register the clock with the timeline
       timeline1.Clock = _clock;
