@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using TimeBeam;
 
 namespace TimeBeamTest.TestObjects {
@@ -12,7 +13,7 @@ namespace TimeBeamTest.TestObjects {
     public string Name { get; set; }
 
     public void Selected() {
-      // Nothing to do
+      Debug.WriteLine( "Selected: " + this );
     }
 
     public AdjustMyParts() {
@@ -24,6 +25,10 @@ namespace TimeBeamTest.TestObjects {
         part.End = part.Start + 20;
         Parts.Add( part );
       }
+    }
+
+    public override string ToString() {
+      return string.Format( "Name: {0}", Name );
     }
   }
 }

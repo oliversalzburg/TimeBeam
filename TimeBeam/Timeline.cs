@@ -985,6 +985,7 @@ namespace TimeBeam {
                 _selectedTracks.Remove( track );
               } else {
                 _selectedTracks.Add( track );
+                track.Selected();
               }
             }
           }
