@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
@@ -273,7 +274,7 @@ namespace TimeBeam {
     }
 
     /// <summary>
-    /// Add a track to the timeline which contains multiple other tracks.
+    ///   Add a track to the timeline which contains multiple other tracks.
     /// </summary>
     /// <param name="track"></param>
     public void AddTrack( IMultiPartTimelineTrack track ) {
@@ -646,15 +647,48 @@ namespace TimeBeam {
           // Indicate ability to move though cursor.
           Cursor = Cursors.SizeWE;
 
+          Rectangle trackAreaBounds = GetTrackAreaBounds();
+
           foreach( TrackSurrogate selectedTrack in _trackSurrogates ) {
             // Calculate the movement delta.
             PointF delta = PointF.Subtract( location, new SizeF( _dragOrigin ) );
             float length = selectedTrack.End - selectedTrack.Start;
+
+            RectangleF trackExtents = GetTrackExtents( selectedTrack );
+
             // Then apply the delta to the track.
             // For that, we first get the original position from the original (non-surrogate) item and
             // then apply the delta to that value to get the offset for the surrogate.
-            selectedTrack.Start = selectedTrack.SubstituteFor.Start + ( delta.X * ( 1 / _renderingScale.X ) );
-            selectedTrack.End = selectedTrack.Start + length;
+            RectangleF proposed = new RectangleF {
+              X = selectedTrack.SubstituteFor.Start + ( delta.X * ( 1 / _renderingScale.X ) ),
+              Y = trackExtents.Y,
+              Width = length,
+              Height = trackExtents.Height
+            };
+
+            // We only want to check against elements that are on the same track.
+            int trackIndex = TrackIndexForTrack( selectedTrack );
+
+            foreach( ITimelineTrack track in _tracks[ trackIndex ] ) {
+              if( track == selectedTrack.SubstituteFor ) {
+                continue;
+              }
+
+              RectangleF boundingRectangle = GetTrackExtents( track );
+              // Bring the proposed rectangle into global space.
+              RectangleF proposedBounds = proposed;
+              proposedBounds.Offset( trackAreaBounds.X, trackAreaBounds.Y );
+
+              // Check if the track item is selected by the selection rectangle.
+              if( proposedBounds.IntersectsWith( boundingRectangle ) ) {
+                Debug.WriteLine( "Intersects with " + track.Name );
+                return;
+              }
+            }
+
+
+            selectedTrack.Start = proposed.Left;
+            selectedTrack.End = proposed.Right;
           }
 
           // Force a redraw.
@@ -667,7 +701,7 @@ namespace TimeBeam {
           foreach( TrackSurrogate selectedTrack in _trackSurrogates ) {
             // Calculate the movement delta.
             PointF delta = PointF.Subtract( location, new SizeF( _dragOrigin ) );
-            // Apply the delta to the start or end of the timline track,
+            // Apply the delta to the start or end of the timeline track,
             // depending on the edge where the user originally started the resizing operation.
             if( ( _activeEdge & RectangleHelper.Edge.Left ) != 0 ) {
               selectedTrack.Start = selectedTrack.SubstituteFor.Start + ( delta.X * ( 1 / _renderingScale.X ) );

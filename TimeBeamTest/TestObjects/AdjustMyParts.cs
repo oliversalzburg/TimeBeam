@@ -18,9 +18,10 @@ namespace TimeBeamTest.TestObjects {
     public AdjustMyParts() {
       for( int partIndex = 0; partIndex < 10; partIndex++ ) {
         AdjustMyLength part = new AdjustMyLength {
-          Start = 10 * partIndex,
-          End = 10 * ( partIndex + 1 )
+          Start = 50 * partIndex,
+          Name = "Part " + partIndex
         };
+        part.End = part.Start + 20;
         Parts.Add( part );
       }
     }
