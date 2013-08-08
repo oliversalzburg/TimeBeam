@@ -264,11 +264,18 @@ namespace TimeBeam {
     /// </summary>
     /// <param name="track">The track to add.</param>
     public void AddTrack( ITimelineTrack track ) {
-      _tracks.Add( new List<ITimelineTrack>{track} );
+      _tracks.Add(
+        new List<ITimelineTrack> {
+          track
+        } );
       RecalculateScrollbarBounds();
       RedrawAndRefresh();
     }
 
+    /// <summary>
+    /// Add a track to the timeline which contains multiple other tracks.
+    /// </summary>
+    /// <param name="track"></param>
     public void AddTrack( IMultiPartTimelineTrack track ) {
       _tracks.Add( track.TrackElements.ToList() );
       RecalculateScrollbarBounds();
@@ -641,12 +648,12 @@ namespace TimeBeam {
 
           foreach( TrackSurrogate selectedTrack in _trackSurrogates ) {
             // Calculate the movement delta.
-            PointF delta = PointF.Subtract( location, new SizeF( _dragOrigin ) ) ;
+            PointF delta = PointF.Subtract( location, new SizeF( _dragOrigin ) );
             float length = selectedTrack.End - selectedTrack.Start;
             // Then apply the delta to the track.
             // For that, we first get the original position from the original (non-surrogate) item and
             // then apply the delta to that value to get the offset for the surrogate.
-            selectedTrack.Start = selectedTrack.SubstituteFor.Start + (delta.X*(1/ _renderingScale.X));
+            selectedTrack.Start = selectedTrack.SubstituteFor.Start + ( delta.X * ( 1 / _renderingScale.X ) );
             selectedTrack.End = selectedTrack.Start + length;
           }
 
@@ -663,9 +670,9 @@ namespace TimeBeam {
             // Apply the delta to the start or end of the timline track,
             // depending on the edge where the user originally started the resizing operation.
             if( ( _activeEdge & RectangleHelper.Edge.Left ) != 0 ) {
-              selectedTrack.Start = selectedTrack.SubstituteFor.Start + (delta.X*(1/ _renderingScale.X));
+              selectedTrack.Start = selectedTrack.SubstituteFor.Start + ( delta.X * ( 1 / _renderingScale.X ) );
             } else if( ( _activeEdge & RectangleHelper.Edge.Right ) != 0 ) {
-              selectedTrack.End = selectedTrack.SubstituteFor.End + (delta.X*(1/ _renderingScale.X));
+              selectedTrack.End = selectedTrack.SubstituteFor.End + ( delta.X * ( 1 / _renderingScale.X ) );
             }
           }
 
@@ -778,7 +785,6 @@ namespace TimeBeam {
             CurrentMode = BehaviorMode.MovingSelection;
           }
 
-
         } else {
           // Reset the track selection.
           _selectedTracks.Clear();
@@ -813,7 +819,6 @@ namespace TimeBeam {
           // Construct the correct rectangle spanning from the selection origin to the current cursor position.
           RectangleF selectionRectangle = RectangleHelper.Normalize( _selectionOrigin, location );
 
-          int trackOffset = 0;
           foreach( ITimelineTrack track in _tracks.SelectMany( t => t ) ) {
             RectangleF boundingRectangle = GetTrackExtents( track );
 
@@ -822,7 +827,6 @@ namespace TimeBeam {
               // Add it to the selection.
               _selectedTracks.Add( track );
             }
-            trackOffset += ( TrackBorderSize * 2 ) + TrackHeight;
           }
 
         } else if( CurrentMode == BehaviorMode.MovingSelection || CurrentMode == BehaviorMode.ResizingSelection ) {
