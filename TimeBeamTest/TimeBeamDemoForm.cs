@@ -7,6 +7,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using TimeBeam;
 using TimeBeam.Timing;
 using TimeBeamTest.TestObjects;
 
@@ -34,6 +35,8 @@ namespace TimeBeamTest {
       foreach( AdjustMyLength track in tracks ) {
         timeline1.AddTrack( track );
       }
+
+      timeline1.AddTrack( new  AdjustMyParts() );
 
       // Register the clock with the timeline
       timeline1.Clock = _clock;

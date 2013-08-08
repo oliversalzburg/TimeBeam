@@ -144,7 +144,7 @@ namespace TimeBeam {
     /// <summary>
     ///   The tracks currently placed on the timeline.
     /// </summary>
-    private readonly List<ITimelineTrack> _tracks = new List<ITimelineTrack>();
+    private readonly List<List<ITimelineTrack>> _tracks = new List<List<ITimelineTrack>>();
 
     /// <summary>
     ///   The currently selected tracks.
@@ -264,7 +264,13 @@ namespace TimeBeam {
     /// </summary>
     /// <param name="track">The track to add.</param>
     public void AddTrack( ITimelineTrack track ) {
-      _tracks.Add( track );
+      _tracks.Add( new List<ITimelineTrack>{track} );
+      RecalculateScrollbarBounds();
+      RedrawAndRefresh();
+    }
+
+    public void AddTrack( IMultiPartTimelineTrack track ) {
+      _tracks.Add( track.TrackElements.ToList() );
       RecalculateScrollbarBounds();
       RedrawAndRefresh();
     }
@@ -284,7 +290,7 @@ namespace TimeBeam {
     /// </summary>
     private void RecalculateScrollbarBounds() {
       ScrollbarV.Max = (int)( ( _tracks.Count * ( TrackHeight + TrackSpacing ) ) * _renderingScale.Y );
-      ScrollbarH.Max = (int)( _tracks.Max( t => t.End ) * _renderingScale.X );
+      ScrollbarH.Max = (int)( _tracks.Max( t => t.Max( te => te.End ) ) * _renderingScale.X );
     }
 
     /// <summary>
@@ -336,7 +342,7 @@ namespace TimeBeam {
     ///   The <see cref="ITimelineTrack" /> if there is one under the given point; <see langword="null" /> otherwise.
     /// </returns>
     private ITimelineTrack TrackHitTest( PointF test ) {
-      foreach( ITimelineTrack track in _tracks ) {
+      foreach( ITimelineTrack track in _tracks.SelectMany( t => t ) ) {
         // The extent of the track, including the border
         RectangleF trackExtent = GetTrackExtents( track );
 
@@ -392,7 +398,7 @@ namespace TimeBeam {
       GraphicsContainer.Clear( BackgroundColor );
 
       DrawBackground();
-      DrawTracks( _tracks );
+      DrawTracks( _tracks.SelectMany( t => t ) );
       DrawTracks( _trackSurrogates );
       DrawSelectionRectangle();
 
@@ -522,7 +528,7 @@ namespace TimeBeam {
     ///   Draw the labels next to each track.
     /// </summary>
     private void DrawTrackLabels() {
-      foreach( ITimelineTrack track in _tracks ) {
+      foreach( ITimelineTrack track in _tracks.SelectMany( t => t ) ) {
         RectangleF trackExtents = GetTrackExtents( track );
         RectangleF labelRect = new RectangleF( 0, trackExtents.Y, TrackLabelWidth, trackExtents.Height );
         GraphicsContainer.FillRectangle( new SolidBrush( Color.FromArgb( 50, 50, 50 ) ), labelRect );
@@ -577,7 +583,7 @@ namespace TimeBeam {
       if( track is TrackSurrogate ) {
         trackToLookFor = ( (TrackSurrogate)track ).SubstituteFor;
       }
-      return _tracks.IndexOf( trackToLookFor );
+      return _tracks.FindIndex( t => t.Contains( trackToLookFor ) );
     }
 
     /// <summary>
@@ -635,7 +641,7 @@ namespace TimeBeam {
 
           foreach( TrackSurrogate selectedTrack in _trackSurrogates ) {
             // Calculate the movement delta.
-            PointF delta = PointF.Subtract( location, new SizeF( _dragOrigin ) );
+            PointF delta = PointF.Subtract( location, new SizeF( _dragOrigin ) ) ;
             float length = selectedTrack.End - selectedTrack.Start;
             // Then apply the delta to the track.
             // For that, we first get the original position from the original (non-surrogate) item and
@@ -808,8 +814,7 @@ namespace TimeBeam {
           RectangleF selectionRectangle = RectangleHelper.Normalize( _selectionOrigin, location );
 
           int trackOffset = 0;
-          for( int trackIndex = 0; trackIndex < _tracks.Count; trackIndex++ ) {
-            ITimelineTrack track = _tracks[ trackIndex ];
+          foreach( ITimelineTrack track in _tracks.SelectMany( t => t ) ) {
             RectangleF boundingRectangle = GetTrackExtents( track );
 
             // Check if the track item is selected by the selection rectangle.
