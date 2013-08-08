@@ -67,6 +67,7 @@
     <Compile Include="Scrollbar\AbstractScrollbar.Designer.cs">
       <DependentUpon>AbstractScrollbar.cs</DependentUpon>
     </Compile>
+    <Compile Include="Surrogates\SingleTrackToMultiTrackWrapper.cs" />
     <Compile Include="Surrogates\TrackSurrogate.cs" />
     <Compile Include="Timeline.cs">
       <SubType>Component</SubType>

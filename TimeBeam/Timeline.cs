@@ -145,7 +145,7 @@ namespace TimeBeam {
     /// <summary>
     ///   The tracks currently placed on the timeline.
     /// </summary>
-    private readonly List<List<ITimelineTrack>> _tracks = new List<List<ITimelineTrack>>();
+    private readonly List<IMultiPartTimelineTrack> _tracks = new List<IMultiPartTimelineTrack>();
 
     /// <summary>
     ///   The currently selected tracks.
@@ -265,10 +265,7 @@ namespace TimeBeam {
     /// </summary>
     /// <param name="track">The track to add.</param>
     public void AddTrack( ITimelineTrack track ) {
-      _tracks.Add(
-        new List<ITimelineTrack> {
-          track
-        } );
+      _tracks.Add( new SingleTrackToMultiTrackWrapper( track ) );
       RecalculateScrollbarBounds();
       RedrawAndRefresh();
     }
@@ -278,7 +275,7 @@ namespace TimeBeam {
     /// </summary>
     /// <param name="track"></param>
     public void AddTrack( IMultiPartTimelineTrack track ) {
-      _tracks.Add( track.TrackElements.ToList() );
+      _tracks.Add( track );
       RecalculateScrollbarBounds();
       RedrawAndRefresh();
     }
@@ -298,7 +295,7 @@ namespace TimeBeam {
     /// </summary>
     private void RecalculateScrollbarBounds() {
       ScrollbarV.Max = (int)( ( _tracks.Count * ( TrackHeight + TrackSpacing ) ) * _renderingScale.Y );
-      ScrollbarH.Max = (int)( _tracks.Max( t => t.Max( te => te.End ) ) * _renderingScale.X );
+      ScrollbarH.Max = (int)( _tracks.Max( t => t.TrackElements.Max( te => te.End ) ) * _renderingScale.X );
     }
 
     /// <summary>
@@ -350,7 +347,7 @@ namespace TimeBeam {
     ///   The <see cref="ITimelineTrack" /> if there is one under the given point; <see langword="null" /> otherwise.
     /// </returns>
     private ITimelineTrack TrackHitTest( PointF test ) {
-      foreach( ITimelineTrack track in _tracks.SelectMany( t => t ) ) {
+      foreach( ITimelineTrack track in _tracks.SelectMany( t => t.TrackElements ) ) {
         // The extent of the track, including the border
         RectangleF trackExtent = GetTrackExtents( track );
 
@@ -406,7 +403,7 @@ namespace TimeBeam {
       GraphicsContainer.Clear( BackgroundColor );
 
       DrawBackground();
-      DrawTracks( _tracks.SelectMany( t => t ) );
+      DrawTracks( _tracks.SelectMany( t => t.TrackElements ) );
       DrawTracks( _trackSurrogates );
       DrawSelectionRectangle();
 
@@ -487,7 +484,7 @@ namespace TimeBeam {
         } else {
           penToUse = gridPen;
         }
-        
+
         GraphicsContainer.DrawLine( penToUse, trackAreaBounds.X + x, trackAreaBounds.Y, trackAreaBounds.X + x, trackAreaBounds.Height );
       }
 
@@ -548,7 +545,7 @@ namespace TimeBeam {
     ///   Draw the labels next to each track.
     /// </summary>
     private void DrawTrackLabels() {
-      foreach( ITimelineTrack track in _tracks.SelectMany( t => t ) ) {
+      foreach( ITimelineTrack track in _tracks.SelectMany( t => t.TrackElements ) ) {
         RectangleF trackExtents = GetTrackExtents( track );
         RectangleF labelRect = new RectangleF( 0, trackExtents.Y, TrackLabelWidth, trackExtents.Height );
         GraphicsContainer.FillRectangle( new SolidBrush( Color.FromArgb( 50, 50, 50 ) ), labelRect );
@@ -603,7 +600,7 @@ namespace TimeBeam {
       if( track is TrackSurrogate ) {
         trackToLookFor = ( (TrackSurrogate)track ).SubstituteFor;
       }
-      return _tracks.FindIndex( t => t.Contains( trackToLookFor ) );
+      return _tracks.FindIndex( t => t.TrackElements.Contains( trackToLookFor ) );
     }
 
     /// <summary>
@@ -682,12 +679,20 @@ namespace TimeBeam {
             // We only want to check against elements that are on the same track.
             int trackIndex = TrackIndexForTrack( selectedTrack );
 
-            foreach( ITimelineTrack track in _tracks[ trackIndex ] ) {
+            foreach( ITimelineTrack track in _tracks[ trackIndex ].TrackElements ) {
+              // Don't check if the track intersects with itself.
               if( track == selectedTrack.SubstituteFor ) {
+                continue;
+              }
+              // Don't check if the track intersects with other selected tracks.
+              // Those will be moved to other places as well (if the move completes)
+              // and they will be checked for collisions as well in later iterations.
+              if( _selectedTracks.Contains( track ) ) {
                 continue;
               }
 
               RectangleF boundingRectangle = GetTrackExtents( track );
+
               // Bring the proposed rectangle into global space.
               RectangleF proposedBounds = proposed;
               proposedBounds.Offset( trackAreaBounds.X, trackAreaBounds.Y );
@@ -698,7 +703,6 @@ namespace TimeBeam {
                 return;
               }
             }
-
 
             selectedTrack.Start = proposed.Left;
             selectedTrack.End = proposed.Right;
@@ -737,7 +741,7 @@ namespace TimeBeam {
             // We only want to check against elements that are on the same track.
             int trackIndex = TrackIndexForTrack( selectedTrack );
 
-            foreach( ITimelineTrack track in _tracks[ trackIndex ] ) {
+            foreach( ITimelineTrack track in _tracks[ trackIndex ].TrackElements ) {
               if( track == selectedTrack.SubstituteFor ) {
                 continue;
               }
@@ -901,7 +905,7 @@ namespace TimeBeam {
           // Construct the correct rectangle spanning from the selection origin to the current cursor position.
           RectangleF selectionRectangle = RectangleHelper.Normalize( _selectionOrigin, location );
 
-          foreach( ITimelineTrack track in _tracks.SelectMany( t => t ) ) {
+          foreach( ITimelineTrack track in _tracks.SelectMany( t => t.TrackElements ) ) {
             RectangleF boundingRectangle = GetTrackExtents( track );
 
             // Check if the track item is selected by the selection rectangle.
@@ -948,7 +952,7 @@ namespace TimeBeam {
       if( e.KeyCode == Keys.A && IsKeyDown( Keys.Control ) ) {
         // Ctrl+A - Select all
         _selectedTracks.Clear();
-        foreach( ITimelineTrack track in _tracks.SelectMany( t => t ) ) {
+        foreach( ITimelineTrack track in _tracks.SelectMany( t => t.TrackElements ) ) {
           _selectedTracks.Add( track );
           track.Selected();
         }
