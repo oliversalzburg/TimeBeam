@@ -646,7 +646,7 @@ namespace TimeBeam {
             // Then apply the delta to the track.
             // For that, we first get the original position from the original (non-surrogate) item and
             // then apply the delta to that value to get the offset for the surrogate.
-            selectedTrack.Start = selectedTrack.SubstituteFor.Start + delta.X;
+            selectedTrack.Start = selectedTrack.SubstituteFor.Start + (delta.X*(1/ _renderingScale.X));
             selectedTrack.End = selectedTrack.Start + length;
           }
 
@@ -663,9 +663,9 @@ namespace TimeBeam {
             // Apply the delta to the start or end of the timline track,
             // depending on the edge where the user originally started the resizing operation.
             if( ( _activeEdge & RectangleHelper.Edge.Left ) != 0 ) {
-              selectedTrack.Start = selectedTrack.SubstituteFor.Start + delta.X;
+              selectedTrack.Start = selectedTrack.SubstituteFor.Start + (delta.X*(1/ _renderingScale.X));
             } else if( ( _activeEdge & RectangleHelper.Edge.Right ) != 0 ) {
-              selectedTrack.End = selectedTrack.SubstituteFor.End + delta.X;
+              selectedTrack.End = selectedTrack.SubstituteFor.End + (delta.X*(1/ _renderingScale.X));
             }
           }
 
