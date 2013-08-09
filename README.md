@@ -2,7 +2,8 @@
 
 A timeline control for .NET (which is still under development).
 
-![Added multi-part tracks](https://i.imgur.com/sxSXtJp.png)
+![Updated Look and Feel](https://i.imgur.com/kAzaej1.png)
+
 
 ## Input
  <kbd>Shift</kbd> | <kbd>Ctrl</kbd> | <kbd>Alt</kbd> | Button/Key     | Action
@@ -23,6 +24,8 @@ Holding <kbd>Ctrl</kbd> allows you pick single tracks in and out of the selectio
 ---
 
 ### Older screenshots
+![Added multi-part tracks](https://i.imgur.com/sxSXtJp.png)
+
 ![Zooming enabled](https://i.imgur.com/mK9GXug.png)
 
 ![Added a playhead](https://i.imgur.com/MvPK02C.png)

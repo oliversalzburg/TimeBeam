@@ -36,11 +36,11 @@ namespace TimeBeam {
             | System.Windows.Forms.AnchorStyles.Right)));
       this.ScrollbarV.BackgroundColor = System.Drawing.Color.Black;
       this.ScrollbarV.ForegroundColor = System.Drawing.Color.Gray;
-      this.ScrollbarV.Location = new System.Drawing.Point(781, 0);
+      this.ScrollbarV.Location = new System.Drawing.Point(791, 0);
       this.ScrollbarV.Max = 100;
       this.ScrollbarV.Min = 0;
       this.ScrollbarV.Name = "ScrollbarV";
-      this.ScrollbarV.Size = new System.Drawing.Size(20, 180);
+      this.ScrollbarV.Size = new System.Drawing.Size(10, 180);
       this.ScrollbarV.TabIndex = 1;
       this.ScrollbarV.Value = 0;
       this.ScrollbarV.Scroll += new System.EventHandler<System.Windows.Forms.ScrollEventArgs>(this.ScrollbarVScroll);
@@ -51,11 +51,11 @@ namespace TimeBeam {
             | System.Windows.Forms.AnchorStyles.Right)));
       this.ScrollbarH.BackgroundColor = System.Drawing.Color.Black;
       this.ScrollbarH.ForegroundColor = System.Drawing.Color.Gray;
-      this.ScrollbarH.Location = new System.Drawing.Point(0, 180);
+      this.ScrollbarH.Location = new System.Drawing.Point(0, 190);
       this.ScrollbarH.Max = 100;
       this.ScrollbarH.Min = 0;
       this.ScrollbarH.Name = "ScrollbarH";
-      this.ScrollbarH.Size = new System.Drawing.Size(780, 20);
+      this.ScrollbarH.Size = new System.Drawing.Size(780, 10);
       this.ScrollbarH.TabIndex = 0;
       this.ScrollbarH.Value = 0;
       this.ScrollbarH.Scroll += new System.EventHandler<System.Windows.Forms.ScrollEventArgs>(this.ScrollbarHScroll);
