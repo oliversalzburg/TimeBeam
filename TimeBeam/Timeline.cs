@@ -279,7 +279,7 @@ namespace TimeBeam {
 
       // Set up the font to use to draw the track labels
       float emHeightForLabel = EmHeightForLabel( "WM_g^~", TrackHeight );
-      _labelFont = new Font( DefaultFont.FontFamily, emHeightForLabel );
+      _labelFont = new Font( DefaultFont.FontFamily, emHeightForLabel - 2 );
     }
     #endregion
 
@@ -518,7 +518,7 @@ namespace TimeBeam {
         int trackIndex = TrackIndexForTrack( track );
 
         // Determine colors for this track
-        Color trackColor = colors[ trackIndex ];
+        Color trackColor = ColorHelper.AdjustColor( colors[ trackIndex ], 0, -0.1, -0.2 );
         Color borderColor = Color.FromArgb( 128, Color.Black );
 
         if( _selectedTracks.Contains( track ) ) {
@@ -551,7 +551,7 @@ namespace TimeBeam {
         // We just need the height and Y-offset, so we get the extents of the first track
         RectangleF trackExtents = BoundsHelper.GetTrackExtents( track.TrackElements.First(), this );
         RectangleF labelRect = new RectangleF( 0, trackExtents.Y, TrackLabelWidth, trackExtents.Height );
-        GraphicsContainer.FillRectangle( new SolidBrush( Color.FromArgb( 50, 50, 50 ) ), labelRect );
+        GraphicsContainer.FillRectangle( new SolidBrush( Color.FromArgb( 30, 30, 30 ) ), labelRect );
         GraphicsContainer.DrawString( track.Name, _labelFont, Brushes.LightGray, labelRect );
       }
     }
