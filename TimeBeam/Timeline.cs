@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
@@ -266,7 +265,7 @@ namespace TimeBeam {
       RequestResizingSelection,
 
       /// <summary>
-      /// The user is scrubbing the playhead.
+      ///   The user is scrubbing the playhead.
       /// </summary>
       TimeScrub
     }
@@ -435,7 +434,7 @@ namespace TimeBeam {
     #region Drawing Methods
     /// <summary>
     ///   Redraws the timeline.
-    /// Should only be called from WM_PAINT aka OnPaint.
+    ///   Should only be called from WM_PAINT aka OnPaint.
     /// </summary>
     private void Redraw() {
       // Clear the buffer
@@ -460,9 +459,8 @@ namespace TimeBeam {
       Rectangle trackAreaBounds = GetTrackAreaBounds();
 
       // Draw horizontal grid.
-      // Premultiply with alpha to improve drawing speed.
-      int gridPenColor = (int)( 255 * GridAlpha / 255f );
-      Pen gridPen = new Pen( Color.FromArgb( gridPenColor, gridPenColor, gridPenColor ) );
+      // Grid is white so just take the alpha as the white value.
+      Pen gridPen = new Pen( Color.FromArgb( GridAlpha, GridAlpha, GridAlpha ) );
       // Calculate the Y position of the first line.
       int firstLineY = (int)( TrackHeight * _renderingScale.Y + trackAreaBounds.Y + _renderingOffset.Y );
       // Calculate the distance between each following line.
@@ -493,8 +491,8 @@ namespace TimeBeam {
       columnWidth = Math.Max( 1, columnWidth );
 
       // Should we draw minor ticks?
-      if( minorTickDistance > 2.0f ) {
-        using( Pen minorGridPen = new Pen( Color.FromArgb( 30, Color.White ) ) {
+      if( minorTickDistance > 5.0f ) {
+        using( Pen minorGridPen = new Pen( Color.FromArgb( 30, 30, 30 ) ) {
           DashStyle = DashStyle.Dot
         } ) {
           for( float x = minorTickOffset; x < Width; x += minorTickDistance ) {
@@ -786,7 +784,7 @@ namespace TimeBeam {
 
           // Force a redraw.
           Invalidate();
-          
+
         } else if( CurrentMode == BehaviorMode.Selecting ) {
           if( _selectionOrigin == PointF.Empty ) {
             throw new InvalidOperationException( "Selection origin not set. This shouldn't happen." );
@@ -1035,7 +1033,7 @@ namespace TimeBeam {
           CurrentMode = BehaviorMode.TimeScrub;
 
         } else {
-        // Clear the selection, unless the user is picking
+          // Clear the selection, unless the user is picking
           if( !IsKeyDown( Keys.Control ) ) {
             _selectedTracks.Clear();
           }
@@ -1068,7 +1066,7 @@ namespace TimeBeam {
         if( CurrentMode == BehaviorMode.Selecting ) {
           // Are we on the track label column?
           int trackIndex = TrackLabelHitTest( location );
-          if( -1 < trackIndex  ) {
+          if( -1 < trackIndex ) {
             IMultiPartTimelineTrack track = _tracks[ trackIndex ];
             track.Selected();
             foreach( ITimelineTrack trackElement in track.TrackElements ) {
