@@ -362,6 +362,36 @@ namespace TimeBeam {
     }
 
     /// <summary>
+    ///   Check if a track label is located at the given position.
+    /// </summary>
+    /// <param name="test">The point to test for.</param>
+    /// <returns>The index of the track the hit label belongs to, if one was hit; -1 otherwise.</returns>
+    private int TrackLabelHitTest( PointF test ) {
+      if( test.X > 0 && test.X < TrackLabelWidth ) {
+        return TrackIndexAtPoint( test );
+      } else {
+        return -1;
+      }
+    }
+
+    /// <summary>
+    ///   Get the index of the track that sits at a certain point.
+    /// </summary>
+    /// <param name="test">The point where to look for a track.</param>
+    /// <returns>The index of the track if one was found; -1 otherwise.</returns>
+    private int TrackIndexAtPoint( PointF test ) {
+      for( int index = 0; index < _tracks.Count; index++ ) {
+        IMultiPartTimelineTrack track = _tracks[ index ];
+        RectangleF trackExtent = BoundsHelper.GetTrackExtents( track.TrackElements.First(), this );
+
+        if( trackExtent.Top < test.Y && trackExtent.Bottom > test.Y ) {
+          return index;
+        }
+      }
+      return -1;
+    }
+
+    /// <summary>
     ///   Calculate an Em-height for a font to fit within a given height.
     /// </summary>
     /// <param name="label">The text to use for the measurement.</param>
@@ -871,7 +901,7 @@ namespace TimeBeam {
           // All track elements on the same track as the selected one
           _tracks[ trackIndex ].TrackElements
             // Add all track surrogates on the same track (except ourself)
-                               /*.Concat( _trackSurrogates.Where( t => t != track && TrackIndexForTrack( t ) == trackIndex ) )*/
+            /*.Concat( _trackSurrogates.Where( t => t != track && TrackIndexForTrack( t ) == trackIndex ) )*/
             // Remove the selected tracks and the one we're the substitute for
                                .Where( t => t != selectedTrack.SubstituteFor && !_selectedTracks.Contains( t ) )
             // Sort all by their position on the track
@@ -1028,21 +1058,38 @@ namespace TimeBeam {
 
       if( ( e.Button & MouseButtons.Left ) != 0 ) {
         if( CurrentMode == BehaviorMode.Selecting ) {
-          // If we were selecting, it's now time to finalize the selection
-          // Construct the correct rectangle spanning from the selection origin to the current cursor position.
-          RectangleF selectionRectangle = RectangleHelper.Normalize( _selectionOrigin, location );
-
-          foreach( ITimelineTrack track in _tracks.SelectMany( t => t.TrackElements ) ) {
-            RectangleF boundingRectangle = BoundsHelper.GetTrackExtents( track, this );
-
-            // Check if the track item is selected by the selection rectangle.
-            if( SelectionHelper.IsSelected( selectionRectangle, boundingRectangle, ModifierKeys ) ) {
+          // Are we on the track label column?
+          int trackIndex = TrackLabelHitTest( location );
+          if( -1 < trackIndex  ) {
+            IMultiPartTimelineTrack track = _tracks[ trackIndex ];
+            track.Selected();
+            foreach( ITimelineTrack trackElement in track.TrackElements ) {
               // Toggle track in and out of selection.
-              if( _selectedTracks.Contains( track ) ) {
-                _selectedTracks.Remove( track );
+              if( _selectedTracks.Contains( trackElement ) ) {
+                _selectedTracks.Remove( trackElement );
               } else {
-                _selectedTracks.Add( track );
-                track.Selected();
+                _selectedTracks.Add( trackElement );
+                trackElement.Selected();
+              }
+            }
+
+          } else {
+            // If we were selecting, it's now time to finalize the selection
+            // Construct the correct rectangle spanning from the selection origin to the current cursor position.
+            RectangleF selectionRectangle = RectangleHelper.Normalize( _selectionOrigin, location );
+
+            foreach( ITimelineTrack track in _tracks.SelectMany( t => t.TrackElements ) ) {
+              RectangleF boundingRectangle = BoundsHelper.GetTrackExtents( track, this );
+
+              // Check if the track item is selected by the selection rectangle.
+              if( SelectionHelper.IsSelected( selectionRectangle, boundingRectangle, ModifierKeys ) ) {
+                // Toggle track in and out of selection.
+                if( _selectedTracks.Contains( track ) ) {
+                  _selectedTracks.Remove( track );
+                } else {
+                  _selectedTracks.Add( track );
+                  track.Selected();
+                }
               }
             }
           }
@@ -1055,6 +1102,7 @@ namespace TimeBeam {
           _trackSurrogates.Clear();
 
           RecalculateScrollbarBounds();
+
         }
 
         // Reset cursor
