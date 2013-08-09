@@ -219,7 +219,7 @@ namespace TimeBeam {
       get { return _clock; }
       set {
         _clock = value;
-        RedrawAndRefresh();
+        Invalidate();
       }
     }
 
@@ -296,7 +296,7 @@ namespace TimeBeam {
     public void AddTrack( ITimelineTrack track ) {
       _tracks.Add( new SingleTrackToMultiTrackWrapper( track ) );
       RecalculateScrollbarBounds();
-      RedrawAndRefresh();
+      Invalidate();
     }
 
     /// <summary>
@@ -306,7 +306,7 @@ namespace TimeBeam {
     public void AddTrack( IMultiPartTimelineTrack track ) {
       _tracks.Add( track );
       RecalculateScrollbarBounds();
-      RedrawAndRefresh();
+      Invalidate();
     }
 
     /// <summary>
@@ -314,7 +314,7 @@ namespace TimeBeam {
     /// </summary>
     public void Tick() {
       if( Clock.IsRunning ) {
-        Redraw();
+        Invalidate();
       }
     }
 
@@ -435,6 +435,7 @@ namespace TimeBeam {
     #region Drawing Methods
     /// <summary>
     ///   Redraws the timeline.
+    /// Should only be called from WM_PAINT aka OnPaint.
     /// </summary>
     private void Redraw() {
       // Clear the buffer
@@ -449,14 +450,6 @@ namespace TimeBeam {
       DrawTrackLabels();
 
       DrawPlayhead();
-    }
-
-    /// <summary>
-    ///   Redraws the control and then invokes a refresh to have it redrawn on screen.
-    /// </summary>
-    private void RedrawAndRefresh() {
-      Redraw();
-      Refresh();
     }
 
     /// <summary>
@@ -649,7 +642,6 @@ namespace TimeBeam {
       PixelMap = new Bitmap( Width, Height );
       GraphicsContainer = Graphics.FromImage( PixelMap );
       GraphicsContainer.Clear( BackgroundColor );
-      Refresh();
     }
     #endregion
 
@@ -663,7 +655,7 @@ namespace TimeBeam {
       base.OnResize( e );
 
       InitializePixelMap();
-      RedrawAndRefresh();
+      Invalidate();
     }
 
     /// <summary>
@@ -673,6 +665,7 @@ namespace TimeBeam {
     protected override void OnPaint( PaintEventArgs e ) {
       base.OnPaint( e );
 
+      Redraw();
       e.Graphics.DrawImage( PixelMap, 0, 0 );
     }
 
@@ -713,7 +706,7 @@ namespace TimeBeam {
           }
 
           // Force a redraw.
-          RedrawAndRefresh();
+          Invalidate();
 
         } else if( CurrentMode == BehaviorMode.ResizingSelection ) {
           // Indicate ability to resize though cursor.
@@ -792,8 +785,8 @@ namespace TimeBeam {
           }
 
           // Force a redraw.
-          RedrawAndRefresh();
-
+          Invalidate();
+          
         } else if( CurrentMode == BehaviorMode.Selecting ) {
           if( _selectionOrigin == PointF.Empty ) {
             throw new InvalidOperationException( "Selection origin not set. This shouldn't happen." );
@@ -805,7 +798,7 @@ namespace TimeBeam {
           // Construct the correct rectangle spanning from the selection origin to the current cursor position.
           _selectionRectangle = RectangleHelper.Normalize( _selectionOrigin, location ).ToRectangle();
 
-          RedrawAndRefresh();
+          Invalidate();
 
         } else if( CurrentMode == BehaviorMode.RequestMovingSelection || CurrentMode == BehaviorMode.RequestResizingSelection ) {
           // A previous action would like a dragging operation to start.
@@ -1058,7 +1051,7 @@ namespace TimeBeam {
         _renderingOffsetBeforePan = _renderingOffset;
       }
 
-      RedrawAndRefresh();
+      Invalidate();
     }
 
     /// <summary>
@@ -1134,7 +1127,7 @@ namespace TimeBeam {
         _renderingOffsetBeforePan = PointF.Empty;
       }
 
-      RedrawAndRefresh();
+      Invalidate();
     }
 
     /// <summary>
@@ -1151,12 +1144,12 @@ namespace TimeBeam {
           _selectedTracks.Add( track );
           track.Selected();
         }
-        RedrawAndRefresh();
+        Invalidate();
 
       } else if( e.KeyCode == Keys.D && IsKeyDown( Keys.Control ) ) {
         // Ctrl+D - Deselect all
         _selectedTracks.Clear();
-        RedrawAndRefresh();
+        Invalidate();
       }
     }
     #endregion
@@ -1169,7 +1162,7 @@ namespace TimeBeam {
     /// <param name="e"></param>
     private void ScrollbarVScroll( object sender, ScrollEventArgs e ) {
       _renderingOffset.Y = -e.NewValue;
-      RedrawAndRefresh();
+      Invalidate();
     }
 
     /// <summary>
@@ -1179,7 +1172,7 @@ namespace TimeBeam {
     /// <param name="e"></param>
     private void ScrollbarHScroll( object sender, ScrollEventArgs e ) {
       _renderingOffset.X = -e.NewValue;
-      RedrawAndRefresh();
+      Invalidate();
     }
 
     /// <summary>
@@ -1237,7 +1230,7 @@ namespace TimeBeam {
         }
       }
 
-      Refresh();
+      Invalidate();
     }
     #endregion
   }

@@ -46,7 +46,6 @@ namespace TimeBeamTest {
     private void timer1_Tick( object sender, EventArgs e ) {
       _clock.Update();
       timeline1.Tick();
-      timeline1.Refresh();
     }
 
     private void TimeBeamDemoForm_KeyUp( object sender, KeyEventArgs e ) {

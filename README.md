@@ -19,7 +19,8 @@ A timeline control for .NET (which is still under development).
 ### Selection
 By default, anything that *intersects* with the selection rectangle is selected.  
 If you hold <kbd>Alt</kbd>, anything that is *contained* within the selection rectangle is selected.  
-Holding <kbd>Ctrl</kbd> allows you pick single tracks in and out of the selection.
+Holding <kbd>Ctrl</kbd> allows you pick single tracks in and out of the selection.  
+Clicking the labels at the start of a track will select all track elements on that track.
 
 ---
 
