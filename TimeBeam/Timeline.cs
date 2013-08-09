@@ -677,7 +677,16 @@ namespace TimeBeam {
                 Width = length,
               }, this, trackIndex );
 
-            IOrderedEnumerable<ITimelineTrack> sortedTracks = _tracks[ trackIndex ].TrackElements.Where( t => t != selectedTrack.SubstituteFor && !_selectedTracks.Contains( t ) ).OrderBy( t => t.Start );
+            TrackSurrogate track = selectedTrack;
+            IOrderedEnumerable<ITimelineTrack> sortedTracks =
+              // All track elements on the same track as the selected one
+              _tracks[ trackIndex ].TrackElements
+                                   // Add all track surrogates on the same track (except ourself)
+                                   .Concat( _trackSurrogates.Where( t => t != track && TrackIndexForTrack( t ) == trackIndex ) )
+                                   // Remove the selected tracks and the one we're the substitute for
+                                   .Where( t => t != selectedTrack.SubstituteFor && !_selectedTracks.Contains( t ) )
+                                   // Sort all by their position on the track
+                                   .OrderBy( t => t.Start );
 
             if( BoundsHelper.IntersectsAny( proposed, sortedTracks.Select( t => BoundsHelper.GetTrackExtents( t, this ) ) ) ) {
               // Let's grab a list of the tracks so we can iterate by index.
