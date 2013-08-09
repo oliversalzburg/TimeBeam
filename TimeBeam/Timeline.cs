@@ -940,6 +940,11 @@ namespace TimeBeam {
         } else {
           delta.X = Math.Min( delta.X, ( proposedStart - selectedTrack.SubstituteFor.Start ) * _renderingScale.X );
         }
+
+        // If the delta is nearing zero, bail out.
+        if( Math.Abs( 0 - delta.X ) < 0.001f ) {
+          return delta;
+        }
       }
 
       return delta;
