@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
@@ -263,6 +264,11 @@ namespace TimeBeam {
       ///   The user is almost resizing the selected tracks.
       /// </summary>
       RequestResizingSelection,
+
+      /// <summary>
+      /// The user is scrubbing the playhead.
+      /// </summary>
+      TimeScrub
     }
     #endregion
 
@@ -819,6 +825,12 @@ namespace TimeBeam {
             // Create and store surrogates for selected timeline tracks.
             _trackSurrogates = SurrogateHelper.GetSurrogates( _selectedTracks );
           }
+
+        } else if( CurrentMode == BehaviorMode.TimeScrub ) {
+          Rectangle trackAreaBounds = GetTrackAreaBounds();
+          // Calculate a clock value for the current X coordinate.
+          float clockValue = ( location.X - _renderingOffset.X - trackAreaBounds.X ) * ( 1 / _renderingScale.X ) * 1000f;
+          Clock.Value = clockValue;
         }
 
       } else if( ( e.Button & MouseButtons.Middle ) != 0 ) {
@@ -1026,8 +1038,11 @@ namespace TimeBeam {
             CurrentMode = BehaviorMode.RequestMovingSelection;
           }
 
+        } else if( location.Y < _playheadExtents.Height ) {
+          CurrentMode = BehaviorMode.TimeScrub;
+
         } else {
-          // Clear the selection, unless the user is picking
+        // Clear the selection, unless the user is picking
           if( !IsKeyDown( Keys.Control ) ) {
             _selectedTracks.Clear();
           }
@@ -1139,6 +1154,7 @@ namespace TimeBeam {
         RedrawAndRefresh();
 
       } else if( e.KeyCode == Keys.D && IsKeyDown( Keys.Control ) ) {
+        // Ctrl+D - Deselect all
         _selectedTracks.Clear();
         RedrawAndRefresh();
       }

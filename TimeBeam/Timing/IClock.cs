@@ -12,6 +12,6 @@
     ///   What is the value of the clock?
     ///   This value would usually indicate milliseconds.
     /// </summary>
-    double Value { get; }
+    double Value { get; set;  }
   }
 }
