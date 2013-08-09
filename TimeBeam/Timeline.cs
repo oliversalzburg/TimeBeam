@@ -871,7 +871,7 @@ namespace TimeBeam {
           // All track elements on the same track as the selected one
           _tracks[ trackIndex ].TrackElements
             // Add all track surrogates on the same track (except ourself)
-                               .Concat( _trackSurrogates.Where( t => t != track && TrackIndexForTrack( t ) == trackIndex ) )
+                               /*.Concat( _trackSurrogates.Where( t => t != track && TrackIndexForTrack( t ) == trackIndex ) )*/
             // Remove the selected tracks and the one we're the substitute for
                                .Where( t => t != selectedTrack.SubstituteFor && !_selectedTracks.Contains( t ) )
             // Sort all by their position on the track
