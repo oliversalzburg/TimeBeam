@@ -727,7 +727,7 @@ namespace TimeBeam {
                   if( elementIndex == 0 ) break;
 
                   // Does the next element in line collide with the start of our selected track?
-                  if( sortedTracksList[ elementIndex - 1 ].Start > proposedStart ) continue;
+                  if( sortedTracksList[ elementIndex - 1 ].End > proposedStart ) continue;
 
                   break;
                 }
