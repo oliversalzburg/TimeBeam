@@ -677,47 +677,51 @@ namespace TimeBeam {
                 Width = length,
               }, this, trackIndex );
 
-            // Now see if this new bounding box would intersect with any other track.
-            foreach( ITimelineTrack track in _tracks[ trackIndex ].TrackElements ) {
-              // Don't check if the track intersects with itself.
-              if( track == selectedTrack.SubstituteFor ) {
-                continue;
-              }
-              // Don't check if the track intersects with other selected tracks.
-              // Those will be moved to other places as well (if the move completes)
-              // and they will be checked for collisions as well in later iterations.
-              if( _selectedTracks.Contains( track ) ) {
-                continue;
-              }
+            IOrderedEnumerable<ITimelineTrack> sortedTracks = _tracks[ trackIndex ].TrackElements.Where( t => t != selectedTrack.SubstituteFor && !_selectedTracks.Contains( t ) ).OrderBy( t => t.Start );
 
-              RectangleF boundingRectangle = BoundsHelper.GetTrackExtents( track, this );
+            if( BoundsHelper.IntersectsAny( proposed, sortedTracks.Select( t => BoundsHelper.GetTrackExtents( t, this ) ) ) ) {
+              // Let's grab a list of the tracks so we can iterate by index.
+              List<ITimelineTrack> sortedTracksList = sortedTracks.ToList();
+              // If delta points towards left, walk the sorted tracks from the left (respecting the proposed start)
+              // and try to find a non-colliding window between track elements.
+              if( delta.X < 0 ) {
+                for( int elementIndex = 0; elementIndex < sortedTracksList.Count(); elementIndex++ ) {
+                  // If the right edge of the element is left of our proposed start, then it's too far left to be interesting.
+                  if( sortedTracksList[ elementIndex ].End < proposedStart ) continue;
 
-              if( proposed.IntersectsWith( boundingRectangle ) ) {
-                // Where did we intersect?
-                float boundingRectangleCenter = boundingRectangle.X + boundingRectangle.Width / 2;
-                float proposedCenter = proposed.X + proposed.Width / 2;
-                // If our proposed rectangle is on the left side of the center of the rectangle we intersect with, snap to the left.
-                // If we're on the right side of the center, snap to the right.
-                if( boundingRectangleCenter - proposedCenter > 0 ) {
-                  proposedStart = track.Start - length;
-                } else {
-                  proposedStart = track.End;
+                  // The right edge of the element is right of our proposed start. So this is at least the first one we intersect with.
+                  // So we'll move our proposed start at the end of that element. However, this could cause another collision at the end of our element.
+                  proposedStart = sortedTracksList[ elementIndex ].End;
+
+                  // Are we at the last element? Then there's no need to check further, we can always snap here.
+                  if( elementIndex == sortedTracksList.Count - 1 ) break;
+
+                  // Does the next element in line collide with the end of our selected track?
+                  if( sortedTracksList[ elementIndex + 1 ].Start < proposedStart + length ) continue;
+
+                  break;
                 }
 
-                // Don't snap before the start of time.
-                proposedStart = Math.Max( 0, proposedStart );
+              } else if( delta.X > 0 ) {
+                // If delta points right, walk the sorted tracks from the right and do the same thing as above.
+                for( int elementIndex = sortedTracksList.Count() - 1; elementIndex >= 0; elementIndex-- ) {
+                  // If the left edge of the element is right of our proposed end, then it's too far right to be interesting.
+                  if( sortedTracksList[ elementIndex ].Start > proposedStart + length ) continue;
 
-                // Construct a new bounding rectangle based on the snapped values.
-                RectangleF newProposed = BoundsHelper.RectangleToTrackExtents(
-                  new RectangleF {
-                    X = proposedStart,
-                    Width = length,
-                  }, this, trackIndex );
+                  // The left edge of the element is left of our proposed end. So this is at least the first one we intersect with.
+                  // So we'll move our proposed end at the start of that element. However, this could cause another collision at the start of our element.
+                  proposedStart = sortedTracksList[ elementIndex ].Start - length;
 
-                // If the new proposed rectangle intersects with any other track element, the snapping approach failed.
-                if( BoundsHelper.IntersectsAny( newProposed, _tracks[ trackIndex ].TrackElements.Select( t => BoundsHelper.GetTrackExtents( t, this ) ) ) ) return;
+                  // Are we at the first element? Then there's no need to check further, we can always snap here.
+                  // We can always snap because we're moving right and this is the first element that is not ourself.
+                  // So we were placed in front of it anyway and we're now just moving closer to it.
+                  if( elementIndex == 0 ) break;
 
-                break;
+                  // Does the next element in line collide with the start of our selected track?
+                  if( sortedTracksList[ elementIndex - 1 ].Start > proposedStart ) continue;
+
+                  break;
+                }
               }
             }
 
