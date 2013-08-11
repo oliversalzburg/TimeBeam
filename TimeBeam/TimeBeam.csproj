@@ -49,6 +49,7 @@
     <Compile Include="Helper\SurrogateHelper.cs" />
     <Compile Include="IMultiPartTimelineTrack.cs" />
     <Compile Include="ITimelineTrack.cs" />
+    <Compile Include="ITimelineTrackBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Scrollbar\VerticalScrollbar.cs">
       <SubType>UserControl</SubType>
@@ -95,7 +96,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.TimeStamp" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_AssemblyInfoFilename="TimeBeam\Properties\AssemblyInfo.cs" />
+      <UserProperties BuildVersion_AssemblyInfoFilename="TimeBeam\Properties\AssemblyInfo.cs" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_BuildVersioningStyle="None.None.Increment.TimeStamp" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
