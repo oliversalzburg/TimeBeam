@@ -824,6 +824,14 @@ namespace TimeBeam {
             Width = length,
           }, this, trackIndex );
 
+        // If the movement on this track would move it to the start of the timeline,
+        // cap the movement for all tracks.
+        // TODO: It could be interesting to enable this anyway through a modifier key.
+        if( proposedStart <= 0 ) {
+          delta.X = -selectedTrack.SubstituteFor.Start * _renderingScale.X;
+          return delta;
+        }
+
         TrackSurrogate track = selectedTrack;
         IOrderedEnumerable<ITimelineTrack> sortedTracks =
           // All track elements on the same track as the selected one
@@ -832,6 +840,7 @@ namespace TimeBeam {
                                .Where( t => t != track.SubstituteFor && !_selectedTracks.Contains( t ) )
             // Sort all by their position on the track
                                .OrderBy( t => t.Start );
+
 
         if( BoundsHelper.IntersectsAny( proposed, sortedTracks.Select( t => BoundsHelper.GetTrackExtents( t, this ) ) ) ) {
           // Let's grab a list of the tracks so we can iterate by index.
@@ -897,9 +906,9 @@ namespace TimeBeam {
           }
         }
 
-
         // If the delta is nearing zero, bail out.
-        if( Math.Abs( 0 - delta.X ) < 0.001f ) {
+        if( Math.Abs( delta.X ) < 0.001f ) {
+          delta.X = 0;
           return delta;
         }
       }
@@ -930,6 +939,14 @@ namespace TimeBeam {
             Width = proposedEnd - proposedStart,
           }, this, trackIndex );
 
+        // If the movement on this track would move it to the start of the timeline,
+        // cap the movement for all tracks.
+        // TODO: It could be interesting to enable this anyway through a modifier key.
+        if( proposedStart <= 0 ) {
+          delta.X = -selectedTrack.SubstituteFor.Start * _renderingScale.X;
+          return delta;
+        }
+
         TrackSurrogate track = selectedTrack;
         IOrderedEnumerable<ITimelineTrack> sortedTracks =
           // All track elements on the same track as the selected one
@@ -944,9 +961,25 @@ namespace TimeBeam {
         if( BoundsHelper.IntersectsAny( proposed, sortedTracks.Select( t => BoundsHelper.GetTrackExtents( t, this ) ) ) ) {
           // Let's grab a list of the tracks so we can iterate by index.
           List<ITimelineTrack> sortedTracksList = sortedTracks.ToList();
-          if( !adjustStart ) {
+          if( adjustStart ) {
+            for( int elementIndex = sortedTracksList.Count() - 1; elementIndex >= 0; elementIndex-- ) {
+              if( sortedTracksList[ elementIndex ].Start >= selectedTrack.SubstituteFor.Start ) {
+                continue;
+              }
+
+              proposedStart = sortedTracksList[ elementIndex ].End;
+              break;
+            }
+
+            // Write back delta depending on calculated start value.
+            if( delta.X < 0 ) {
+              delta.X = Math.Max( delta.X, ( proposedStart - selectedTrack.SubstituteFor.Start ) * _renderingScale.X );
+            } else {
+              delta.X = Math.Min( delta.X, ( proposedStart - selectedTrack.SubstituteFor.Start ) * _renderingScale.X );
+            }
+          } else {
             for( int elementIndex = 0; elementIndex < sortedTracksList.Count(); elementIndex++ ) {
-              if( sortedTracksList[ elementIndex ].End < selectedTrack.SubstituteFor.Start ) {
+              if( sortedTracksList[ elementIndex ].End <= selectedTrack.SubstituteFor.Start ) {
                 continue;
               }
 
@@ -961,22 +994,6 @@ namespace TimeBeam {
               delta.X = Math.Min( delta.X, ( proposedEnd - selectedTrack.SubstituteFor.End ) * _renderingScale.X );
             }
 
-          } else {
-            for( int elementIndex = sortedTracksList.Count() - 1; elementIndex >= 0; elementIndex-- ) {
-              if( sortedTracksList[ elementIndex ].Start > selectedTrack.SubstituteFor.End ) {
-                continue;
-              }
-
-              proposedStart = sortedTracksList[ elementIndex ].End;
-              break;
-            }
-
-            // Write back delta depending on calculated start value.
-            if( delta.X < 0 ) {
-              delta.X = Math.Max( delta.X, ( proposedStart - selectedTrack.SubstituteFor.Start ) * _renderingScale.X );
-            } else {
-              delta.X = Math.Min( delta.X, ( proposedStart - selectedTrack.SubstituteFor.Start ) * _renderingScale.X );
-            }
           }
         }
 
