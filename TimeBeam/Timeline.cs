@@ -692,68 +692,21 @@ namespace TimeBeam {
           PointF delta = PointF.Subtract( location, new SizeF( _dragOrigin ) );
 
           foreach( TrackSurrogate selectedTrack in _trackSurrogates ) {
-
-            // Store the length of this track
-            float length = selectedTrack.SubstituteFor.End - selectedTrack.SubstituteFor.Start;
-
             // Initialize the proposed start and end with the current track values for now.
             float proposedStart = selectedTrack.SubstituteFor.Start;
             float proposedEnd = selectedTrack.SubstituteFor.End;
-            // Get the index of the selected track to use it as a basis for calculating the proposed new bounding box.
-            int trackIndex = TrackIndexForTrack( selectedTrack );
-            // Construct a rectangle which we'll use to construct the screen-space bounding box soon.
-            RectangleF proposedSeed = new RectangleF() {
-              X = selectedTrack.SubstituteFor.Start,
-              Width = length
-            };
 
             // Apply the delta to the start or end of the timeline track,
             // depending on the edge where the user originally started the resizing operation.
             if( ( _activeEdge & RectangleHelper.Edge.Left ) != 0 ) {
+              // Adjust the delta so that all selected tracks can be resized without collisions.
+              delta = AcceptableResizingDelta( delta, true );
               proposedStart = Math.Max( 0, proposedStart + delta.X * ( 1 / _renderingScale.X ) );
-              proposedSeed.X = proposedStart;
-              proposedSeed.Width = proposedEnd - proposedStart;
 
             } else if( ( _activeEdge & RectangleHelper.Edge.Right ) != 0 ) {
-              proposedEnd += ( delta.X * ( 1 / _renderingScale.X ) );
-              proposedSeed.Width = proposedEnd - proposedStart;
-            }
-
-            // Use the calculated valued to get a full screen-space bounding box for the proposed track location.
-            RectangleF proposed = BoundsHelper.RectangleToTrackExtents( proposedSeed, this, trackIndex );
-
-            // Now see if this new bounding box would intersect with any other track.
-            foreach( ITimelineTrack track in _tracks[ trackIndex ].TrackElements ) {
-              // Don't check if the track intersects with itself.
-              if( track == selectedTrack.SubstituteFor ) {
-                continue;
-              }
-
-              RectangleF boundingRectangle = BoundsHelper.GetTrackExtents( track, this );
-
-              if( proposed.IntersectsWith( boundingRectangle ) ) {
-
-                // Where did we intersect?
-                if( boundingRectangle.Contains( proposed.Right, boundingRectangle.Y ) ) {
-                  proposedEnd = track.Start;
-                } else if( boundingRectangle.Contains( proposed.Left, boundingRectangle.Y ) ) {
-                  proposedStart = track.End;
-                }
-
-                // Construct a new bounding rectangle based on the snapped values.
-                RectangleF newProposed = BoundsHelper.RectangleToTrackExtents(
-                  new RectangleF {
-                    X = proposedStart,
-                    Width = proposedEnd - proposedStart,
-                  }, this, trackIndex );
-
-                // If the new proposed rectangle intersects with any other track element, the snapping approach failed.
-                if( BoundsHelper.IntersectsAny( newProposed, _tracks[ trackIndex ].TrackElements.Select( t => BoundsHelper.GetTrackExtents( t, this ) ) ) ) {
-                  return;
-                }
-
-                break;
-              }
+              // Adjust the delta so that all selected tracks can be resized without collisions.
+              delta = AcceptableResizingDelta( delta, false );
+              proposedEnd = Math.Max( 0, proposedEnd + ( delta.X * ( 1 / _renderingScale.X ) ) );
             }
 
             selectedTrack.Start = proposedStart;
@@ -864,7 +817,7 @@ namespace TimeBeam {
         float proposedStart = Math.Max( 0, selectedTrack.SubstituteFor.Start + ( delta.X * ( 1 / _renderingScale.X ) ) );
         // Get the index of the selected track to use it as a basis for calculating the proposed new bounding box.
         int trackIndex = TrackIndexForTrack( selectedTrack );
-        // Use the calculated valued to get a full screen-space bounding box for the proposed track location.
+        // Use the calculated values to get a full screen-space bounding box for the proposed track location.
         RectangleF proposed = BoundsHelper.RectangleToTrackExtents(
           new RectangleF {
             X = proposedStart,
@@ -875,10 +828,8 @@ namespace TimeBeam {
         IOrderedEnumerable<ITimelineTrack> sortedTracks =
           // All track elements on the same track as the selected one
           _tracks[ trackIndex ].TrackElements
-            // Add all track surrogates on the same track (except ourself)
-            /*.Concat( _trackSurrogates.Where( t => t != track && TrackIndexForTrack( t ) == trackIndex ) )*/
             // Remove the selected tracks and the one we're the substitute for
-                               .Where( t => t != selectedTrack.SubstituteFor && !_selectedTracks.Contains( t ) )
+                               .Where( t => t != track.SubstituteFor && !_selectedTracks.Contains( t ) )
             // Sort all by their position on the track
                                .OrderBy( t => t.Start );
 
@@ -938,12 +889,95 @@ namespace TimeBeam {
               break;
             }
           }
+
+          if( delta.X < 0 ) {
+            delta.X = Math.Max( delta.X, ( proposedStart - selectedTrack.SubstituteFor.Start ) * _renderingScale.X );
+          } else {
+            delta.X = Math.Min( delta.X, ( proposedStart - selectedTrack.SubstituteFor.Start ) * _renderingScale.X );
+          }
         }
 
-        if( delta.X < 0 ) {
-          delta.X = Math.Max( delta.X, ( proposedStart - selectedTrack.SubstituteFor.Start ) * _renderingScale.X );
-        } else {
-          delta.X = Math.Min( delta.X, ( proposedStart - selectedTrack.SubstituteFor.Start ) * _renderingScale.X );
+
+        // If the delta is nearing zero, bail out.
+        if( Math.Abs( 0 - delta.X ) < 0.001f ) {
+          return delta;
+        }
+      }
+
+      return delta;
+    }
+
+    /// <summary>
+    ///   Calculate which resizing delta would be acceptable to apply to all currently selected tracks.
+    /// </summary>
+    /// <param name="delta">The suggested resizing delta.</param>
+    /// <param name="adjustStart">
+    ///   Set to <see langword="true" /> if the left (start) edge of the focused element is being resized. Set to
+    ///   <see langword="false" /> if the right (end) edge of the focus element is being resized.
+    /// </param>
+    /// <returns>The adjusted resizing delta that is acceptable for all selected tracks.</returns>
+    private PointF AcceptableResizingDelta( PointF delta, bool adjustStart ) {
+      foreach( TrackSurrogate selectedTrack in _trackSurrogates ) {
+        // Calculate the proposed new start and end for the track depending on the adjustStart parameter and given delta..
+        float proposedStart = ( !adjustStart ) ? selectedTrack.SubstituteFor.Start : Math.Max( 0, selectedTrack.SubstituteFor.Start + ( delta.X * ( 1 / _renderingScale.X ) ) );
+        float proposedEnd = ( adjustStart ) ? selectedTrack.SubstituteFor.End : Math.Max( 0, selectedTrack.SubstituteFor.End + ( delta.X * ( 1 / _renderingScale.X ) ) );
+        // Get the index of the selected track to use it as a basis for calculating the proposed new bounding box.
+        int trackIndex = TrackIndexForTrack( selectedTrack );
+        // Use the calculated values to get a full screen-space bounding box for the proposed track location.
+        RectangleF proposed = BoundsHelper.RectangleToTrackExtents(
+          new RectangleF {
+            X = proposedStart,
+            Width = proposedEnd - proposedStart,
+          }, this, trackIndex );
+
+        TrackSurrogate track = selectedTrack;
+        IOrderedEnumerable<ITimelineTrack> sortedTracks =
+          // All track elements on the same track as the selected one
+          _tracks[ trackIndex ].TrackElements
+            // Add all track surrogates on the same track (except ourself)
+                               .Concat( _trackSurrogates.Where( t => t != track && TrackIndexForTrack( t ) == trackIndex ) )
+            // Remove the selected tracks and the one we're the substitute for
+                               .Where( t => t != track.SubstituteFor && !_selectedTracks.Contains( t ) )
+            // Sort all by their position on the track
+                               .OrderBy( t => t.Start );
+
+        if( BoundsHelper.IntersectsAny( proposed, sortedTracks.Select( t => BoundsHelper.GetTrackExtents( t, this ) ) ) ) {
+          // Let's grab a list of the tracks so we can iterate by index.
+          List<ITimelineTrack> sortedTracksList = sortedTracks.ToList();
+          if( !adjustStart ) {
+            for( int elementIndex = 0; elementIndex < sortedTracksList.Count(); elementIndex++ ) {
+              if( sortedTracksList[ elementIndex ].End < selectedTrack.SubstituteFor.Start ) {
+                continue;
+              }
+
+              proposedEnd = sortedTracksList[ elementIndex ].Start;
+              break;
+            }
+
+            // Write back delta depending on calculated end value.
+            if( delta.X < 0 ) {
+              delta.X = Math.Max( delta.X, ( proposedEnd - selectedTrack.SubstituteFor.End ) * _renderingScale.X );
+            } else {
+              delta.X = Math.Min( delta.X, ( proposedEnd - selectedTrack.SubstituteFor.End ) * _renderingScale.X );
+            }
+
+          } else {
+            for( int elementIndex = sortedTracksList.Count() - 1; elementIndex >= 0; elementIndex-- ) {
+              if( sortedTracksList[ elementIndex ].Start > selectedTrack.SubstituteFor.End ) {
+                continue;
+              }
+
+              proposedStart = sortedTracksList[ elementIndex ].End;
+              break;
+            }
+
+            // Write back delta depending on calculated start value.
+            if( delta.X < 0 ) {
+              delta.X = Math.Max( delta.X, ( proposedStart - selectedTrack.SubstituteFor.Start ) * _renderingScale.X );
+            } else {
+              delta.X = Math.Min( delta.X, ( proposedStart - selectedTrack.SubstituteFor.Start ) * _renderingScale.X );
+            }
+          }
         }
 
         // If the delta is nearing zero, bail out.
