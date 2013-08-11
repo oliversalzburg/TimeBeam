@@ -95,16 +95,6 @@ namespace TimeBeam {
 
     #region Drawing
     /// <summary>
-    ///   The backbuffer itself.
-    /// </summary>
-    private Bitmap PixelMap { get; set; }
-
-    /// <summary>
-    ///   The <see cref="Graphics" /> object to draw into the backbuffer.
-    /// </summary>
-    private Graphics GraphicsContainer { get; set; }
-
-    /// <summary>
     ///   The background color of the timeline.
     /// </summary>
     [Description( "The background color of the timeline." )]
@@ -280,8 +270,6 @@ namespace TimeBeam {
       SetStyle(
         ControlStyles.AllPaintingInWmPaint | ControlStyles.Opaque | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw | ControlStyles.Selectable | ControlStyles.UserPaint, true );
 
-      InitializePixelMap();
-
       // Set up the font to use to draw the track labels
       float emHeightForLabel = EmHeightForLabel( "WM_g^~", TrackHeight );
       _labelFont = new Font( DefaultFont.FontFamily, emHeightForLabel - 2 );
@@ -405,11 +393,12 @@ namespace TimeBeam {
     private float EmHeightForLabel( string label, float maxHeight ) {
       float size = DefaultFont.Size;
       Font currentFont = new Font( DefaultFont.FontFamily, size );
-      SizeF measured = GraphicsContainer.MeasureString( label, currentFont );
+      Graphics graphics = Graphics.FromHwnd( this.Handle );
+      SizeF measured = graphics.MeasureString( label, currentFont );
       while( measured.Height < maxHeight ) {
         size += 1;
         currentFont = new Font( DefaultFont.FontFamily, size );
-        measured = GraphicsContainer.MeasureString( label, currentFont );
+        measured = graphics.MeasureString( label, currentFont );
       }
       return size - 1;
     }
@@ -448,25 +437,25 @@ namespace TimeBeam {
     ///   Redraws the timeline.
     ///   Should only be called from WM_PAINT aka OnPaint.
     /// </summary>
-    private void Redraw() {
+    private void Redraw( Graphics graphics ) {
       // Clear the buffer
-      GraphicsContainer.Clear( BackgroundColor );
+      graphics.Clear( BackgroundColor );
 
-      DrawBackground();
-      DrawTracks( _tracks.SelectMany( t => t.TrackElements ) );
-      DrawTracks( _trackSurrogates );
-      DrawSelectionRectangle();
+      DrawBackground( graphics );
+      DrawTracks( _tracks.SelectMany( t => t.TrackElements ), graphics );
+      DrawTracks( _trackSurrogates, graphics );
+      DrawSelectionRectangle( graphics );
 
       // Draw labels after the tracks to draw over elements that are partially moved out of the viewing area
-      DrawTrackLabels();
+      DrawTrackLabels( graphics );
 
-      DrawPlayhead();
+      DrawPlayhead( graphics );
     }
 
     /// <summary>
     ///   Draws the background of the control.
     /// </summary>
-    private void DrawBackground() {
+    private void DrawBackground( Graphics graphics ) {
 
       Rectangle trackAreaBounds = GetTrackAreaBounds();
 
@@ -480,7 +469,7 @@ namespace TimeBeam {
       actualRowHeight = Math.Max( 1, actualRowHeight );
       // Draw the actual lines.
       for( int y = firstLineY; y < Height; y += actualRowHeight ) {
-        GraphicsContainer.DrawLine( gridPen, trackAreaBounds.X, y, trackAreaBounds.Width, y );
+        graphics.DrawLine( gridPen, trackAreaBounds.X, y, trackAreaBounds.Width, y );
       }
 
       // The distance between the minor ticks.
@@ -508,7 +497,7 @@ namespace TimeBeam {
           DashStyle = DashStyle.Dot
         } ) {
           for( float x = minorTickOffset; x < Width; x += minorTickDistance ) {
-            GraphicsContainer.DrawLine( minorGridPen, trackAreaBounds.X + x, trackAreaBounds.Y, trackAreaBounds.X + x, trackAreaBounds.Height );
+            graphics.DrawLine( minorGridPen, trackAreaBounds.X + x, trackAreaBounds.Y, trackAreaBounds.X + x, trackAreaBounds.Height );
           }
         }
       }
@@ -526,7 +515,7 @@ namespace TimeBeam {
           penToUse = gridPen;
         }
 
-        GraphicsContainer.DrawLine( penToUse, trackAreaBounds.X + x, trackAreaBounds.Y, trackAreaBounds.X + x, trackAreaBounds.Height );
+        graphics.DrawLine( penToUse, trackAreaBounds.X + x, trackAreaBounds.Y, trackAreaBounds.X + x, trackAreaBounds.Height );
       }
 
       gridPen.Dispose();
@@ -537,7 +526,7 @@ namespace TimeBeam {
     ///   Draw a list of tracks onto the timeline.
     /// </summary>
     /// <param name="tracks">The tracks to draw.</param>
-    private void DrawTracks( IEnumerable<ITimelineTrack> tracks ) {
+    private void DrawTracks( IEnumerable<ITimelineTrack> tracks, Graphics graphics ) {
 
       Rectangle trackAreaBounds = GetTrackAreaBounds();
 
@@ -567,9 +556,9 @@ namespace TimeBeam {
         // Draw the main track area.
         if( track is TrackSurrogate ) {
           // Draw surrogates with a transparent brush.
-          GraphicsContainer.FillRectangle( new SolidBrush( Color.FromArgb( 128, trackColor ) ), trackExtent );
+          graphics.FillRectangle( new SolidBrush( Color.FromArgb( 128, trackColor ) ), trackExtent );
         } else {
-          GraphicsContainer.FillRectangle( new SolidBrush( trackColor ), trackExtent );
+          graphics.FillRectangle( new SolidBrush( trackColor ), trackExtent );
         }
 
         // Compensate for border size
@@ -578,20 +567,20 @@ namespace TimeBeam {
         trackExtent.Height -= TrackBorderSize;
         trackExtent.Width -= TrackBorderSize;
 
-        GraphicsContainer.DrawRectangle( new Pen( borderColor, TrackBorderSize ), trackExtent.X, trackExtent.Y, trackExtent.Width, trackExtent.Height );
+        graphics.DrawRectangle( new Pen( borderColor, TrackBorderSize ), trackExtent.X, trackExtent.Y, trackExtent.Width, trackExtent.Height );
       }
     }
 
     /// <summary>
     ///   Draw the labels next to each track.
     /// </summary>
-    private void DrawTrackLabels() {
+    private void DrawTrackLabels( Graphics graphics ) {
       foreach( IMultiPartTimelineTrack track in _tracks ) {
         // We just need the height and Y-offset, so we get the extents of the first track
         RectangleF trackExtents = BoundsHelper.GetTrackExtents( track.TrackElements.First(), this );
         RectangleF labelRect = new RectangleF( 0, trackExtents.Y, TrackLabelWidth, trackExtents.Height );
-        GraphicsContainer.FillRectangle( new SolidBrush( Color.FromArgb( 30, 30, 30 ) ), labelRect );
-        GraphicsContainer.DrawString( track.Name, _labelFont, Brushes.LightGray, labelRect );
+        graphics.FillRectangle( new SolidBrush( Color.FromArgb( 30, 30, 30 ) ), labelRect );
+        graphics.DrawString( track.Name, _labelFont, Brushes.LightGray, labelRect );
       }
     }
 
@@ -599,14 +588,14 @@ namespace TimeBeam {
     ///   Draw a playhead on the timeline.
     ///   The playhead indicates a time value.
     /// </summary>
-    private void DrawPlayhead() {
+    private void DrawPlayhead( Graphics graphics ) {
       // Only draw a playhead if we have a clock set.
       if( null != Clock ) {
         // Calculate the position of the playhead.
         Rectangle trackAreaBounds = GetTrackAreaBounds();
 
         // Draw a background for the playhead. This also overdraws elements that drew into the playhead area.
-        GraphicsContainer.FillRectangle( Brushes.Black, 0, 0, Width, _playheadExtents.Height );
+        graphics.FillRectangle( Brushes.Black, 0, 0, Width, _playheadExtents.Height );
 
         float playheadOffset = (float)( trackAreaBounds.X + ( Clock.Value * 0.001f ) * _renderingScale.X ) + _renderingOffset.X;
         // Don't draw when not in view.
@@ -615,17 +604,17 @@ namespace TimeBeam {
         }
 
         // Draw the playhead as a single line.
-        GraphicsContainer.DrawLine( Pens.SpringGreen, playheadOffset, trackAreaBounds.Y, playheadOffset, trackAreaBounds.Height );
+        graphics.DrawLine( Pens.SpringGreen, playheadOffset, trackAreaBounds.Y, playheadOffset, trackAreaBounds.Height );
 
-        GraphicsContainer.FillRectangle( Brushes.SpringGreen, playheadOffset - _playheadExtents.Width / 2, 0, _playheadExtents.Width, _playheadExtents.Height );
+        graphics.FillRectangle( Brushes.SpringGreen, playheadOffset - _playheadExtents.Width / 2, 0, _playheadExtents.Width, _playheadExtents.Height );
       }
     }
 
     /// <summary>
     ///   Draws the selection rectangle the user is drawing.
     /// </summary>
-    private void DrawSelectionRectangle() {
-      GraphicsContainer.DrawRectangle(
+    private void DrawSelectionRectangle( Graphics graphics ) {
+      graphics.DrawRectangle(
         new Pen( Color.LightGray, 1 ) {
           DashStyle = DashStyle.Dot
         }, _selectionRectangle.ToRectangle() );
@@ -644,30 +633,9 @@ namespace TimeBeam {
       }
       return _tracks.FindIndex( t => t.TrackElements.Contains( trackToLookFor ) );
     }
-
-    /// <summary>
-    ///   Initialize the backbuffer
-    /// </summary>
-    private void InitializePixelMap() {
-      PixelMap = new Bitmap( Width, Height );
-      GraphicsContainer = Graphics.FromImage( PixelMap );
-      GraphicsContainer.Clear( BackgroundColor );
-    }
     #endregion
 
     #region Event Handler
-    /// <summary>
-    ///   Invoked when the control is resized.
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    protected override void OnResize( EventArgs e ) {
-      base.OnResize( e );
-
-      InitializePixelMap();
-      Invalidate();
-    }
-
     /// <summary>
     ///   Invoked when the control is repainted
     /// </summary>
@@ -675,8 +643,7 @@ namespace TimeBeam {
     protected override void OnPaint( PaintEventArgs e ) {
       base.OnPaint( e );
 
-      Redraw();
-      e.Graphics.DrawImage( PixelMap, 0, 0 );
+      Redraw( e.Graphics );
     }
 
     /// <summary>
@@ -1077,7 +1044,7 @@ namespace TimeBeam {
           int trackIndex = TrackLabelHitTest( location );
           if( -1 < trackIndex ) {
             IMultiPartTimelineTrack track = _tracks[ trackIndex ];
-            
+
             // SingleTrackToMultiTrackWrapper instances are implicitly created by the timeline itself.
             // There is no need to invoke the method, as the single track element it contains will be notified by the loop below.
             if( !( track is SingleTrackToMultiTrackWrapper ) ) {
