@@ -942,7 +942,7 @@ namespace TimeBeam {
         // If the movement on this track would move it to the start of the timeline,
         // cap the movement for all tracks.
         // TODO: It could be interesting to enable this anyway through a modifier key.
-        if( proposedStart <= 0 ) {
+        if( adjustStart && proposedStart <= 0 ) {
           delta.X = -selectedTrack.SubstituteFor.Start * _renderingScale.X;
           return delta;
         }
