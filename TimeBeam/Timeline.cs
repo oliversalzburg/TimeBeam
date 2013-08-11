@@ -683,7 +683,6 @@ namespace TimeBeam {
     ///   Invoked when the cursor is moved over the control.
     /// </summary>
     /// <param name="e"></param>
-    /// <exception cref="InvalidOperationException">Selection origin not set. This shouldn't happen.</exception>
     protected override void OnMouseMove( MouseEventArgs e ) {
       base.OnMouseMove( e );
 
@@ -798,10 +797,6 @@ namespace TimeBeam {
           Invalidate();
 
         } else if( CurrentMode == BehaviorMode.Selecting ) {
-          if( _selectionOrigin == PointF.Empty ) {
-            throw new InvalidOperationException( "Selection origin not set. This shouldn't happen." );
-          }
-
           // Set the appropriate cursor for a selection action.
           Cursor = Cursors.Cross;
 
