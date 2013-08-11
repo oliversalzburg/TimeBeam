@@ -35,7 +35,8 @@ namespace TimeBeamTest {
         timeline1.AddTrack( track );
       }
 
-      timeline1.AddTrack( new  AdjustMyParts(){Name="Visible"} );
+      timeline1.AddTrack( new  AdjustMyParts(20){Name="Visible"} );
+      timeline1.AddTrack( new  AdjustMyParts(0){Name="Visible"} );
 
       // Register the clock with the timeline
       timeline1.Clock = _clock;

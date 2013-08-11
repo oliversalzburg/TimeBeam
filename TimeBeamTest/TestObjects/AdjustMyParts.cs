@@ -20,10 +20,10 @@ namespace TimeBeamTest.TestObjects {
       Debug.WriteLine( "Deselected: " + this );
     }
 
-    public AdjustMyParts() {
+    public AdjustMyParts( float distanceBetweenParts ) {
       for( int partIndex = 0; partIndex < 10; partIndex++ ) {
         AdjustMyLength part = new AdjustMyLength {
-          Start = 50 * partIndex,
+          Start = (20+ distanceBetweenParts) * partIndex ,
           Name = "Part " + partIndex
         };
         part.End = part.Start + 20;

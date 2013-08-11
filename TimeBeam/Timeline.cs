@@ -826,109 +826,114 @@ namespace TimeBeam {
     /// <param name="delta">The suggested movement delta.</param>
     /// <returns>The adjusted movement delta that is acceptable for all selected tracks.</returns>
     private PointF AcceptableMovementDelta( PointF delta ) {
-      foreach( TrackSurrogate selectedTrack in _trackSurrogates ) {
-        // Store the length of this track
-        float length = selectedTrack.SubstituteFor.End - selectedTrack.SubstituteFor.Start;
+      PointF lastDelta;
+      do {
+        lastDelta = delta;
 
-        // Calculate the proposed new start for the track depending on the given delta.
-        float proposedStart = Math.Max( 0, selectedTrack.SubstituteFor.Start + ( delta.X * ( 1 / _renderingScale.X ) ) );
-        // Get the index of the selected track to use it as a basis for calculating the proposed new bounding box.
-        int trackIndex = TrackIndexForTrack( selectedTrack );
-        // Use the calculated values to get a full screen-space bounding box for the proposed track location.
-        RectangleF proposed = BoundsHelper.RectangleToTrackExtents(
-          new RectangleF {
-            X = proposedStart,
-            Width = length,
-          }, this, trackIndex );
+        foreach( TrackSurrogate selectedTrack in _trackSurrogates ) {
+          // Store the length of this track
+          float length = selectedTrack.SubstituteFor.End - selectedTrack.SubstituteFor.Start;
 
-        // If the movement on this track would move it to the start of the timeline,
-        // cap the movement for all tracks.
-        // TODO: It could be interesting to enable this anyway through a modifier key.
-        if( proposedStart <= 0 ) {
-          delta.X = -selectedTrack.SubstituteFor.Start * _renderingScale.X;
-          return delta;
-        }
+          // Calculate the proposed new start for the track depending on the given delta.
+          float proposedStart = Math.Max( 0, selectedTrack.SubstituteFor.Start + ( delta.X * ( 1 / _renderingScale.X ) ) );
 
-        TrackSurrogate track = selectedTrack;
-        IOrderedEnumerable<ITimelineTrack> sortedTracks =
-          // All track elements on the same track as the selected one
-          _tracks[ trackIndex ].TrackElements
-            // Remove the selected tracks and the one we're the substitute for
-                               .Where( t => t != track.SubstituteFor && !_selectedTracks.Contains( t ) )
-            // Sort all by their position on the track
-                               .OrderBy( t => t.Start );
+          // If the movement on this track would move it to the start of the timeline,
+          // cap the movement for all tracks.
+          // TODO: It could be interesting to enable this anyway through a modifier key.
+          if( proposedStart <= 0 ) {
+            delta.X = -selectedTrack.SubstituteFor.Start * _renderingScale.X;
+            proposedStart = Math.Max( 0, selectedTrack.SubstituteFor.Start + ( delta.X * ( 1 / _renderingScale.X ) ) );
+          }
 
+          // Get the index of the selected track to use it as a basis for calculating the proposed new bounding box.
+          int trackIndex = TrackIndexForTrack( selectedTrack );
+          // Use the calculated values to get a full screen-space bounding box for the proposed track location.
+          RectangleF proposed = BoundsHelper.RectangleToTrackExtents(
+            new RectangleF {
+              X = proposedStart,
+              Width = length,
+            }, this, trackIndex );
 
-        if( BoundsHelper.IntersectsAny( proposed, sortedTracks.Select( t => BoundsHelper.GetTrackExtents( t, this ) ) ) ) {
-          // Let's grab a list of the tracks so we can iterate by index.
-          List<ITimelineTrack> sortedTracksList = sortedTracks.ToList();
-          // If delta points towards left, walk the sorted tracks from the left (respecting the proposed start)
-          // and try to find a non-colliding window between track elements.
-          if( delta.X < 0 ) {
-            for( int elementIndex = 0; elementIndex < sortedTracksList.Count(); elementIndex++ ) {
-              // If the right edge of the element is left of our proposed start, then it's too far left to be interesting.
-              if( sortedTracksList[ elementIndex ].End < proposedStart ) {
-                continue;
-              }
+          TrackSurrogate track = selectedTrack;
+          IOrderedEnumerable<ITimelineTrack> sortedTracks =
+            // All track elements on the same track as the selected one
+            _tracks[ trackIndex ].TrackElements
+              // Remove the selected tracks and the one we're the substitute for
+                                 .Where( t => t != track.SubstituteFor && !_selectedTracks.Contains( t ) )
+              // Sort all by their position on the track
+                                 .OrderBy( t => t.Start );
 
-              // The right edge of the element is right of our proposed start. So this is at least the first one we intersect with.
-              // So we'll move our proposed start at the end of that element. However, this could cause another collision at the end of our element.
-              proposedStart = sortedTracksList[ elementIndex ].End;
+          if( BoundsHelper.IntersectsAny( proposed, sortedTracks.Select( t => BoundsHelper.GetTrackExtents( t, this ) ) ) ) {
+            // Let's grab a list of the tracks so we can iterate by index.
+            List<ITimelineTrack> sortedTracksList = sortedTracks.ToList();
+            // If delta points towards left, walk the sorted tracks from the left (respecting the proposed start)
+            // and try to find a non-colliding window between track elements.
+            if( delta.X < 0 ) {
+              for( int elementIndex = 0; elementIndex < sortedTracksList.Count(); elementIndex++ ) {
+                // If the right edge of the element is left of our proposed start, then it's too far left to be interesting.
+                if( sortedTracksList[ elementIndex ].End < proposedStart ) {
+                  continue;
+                }
 
-              // Are we at the last element? Then there's no need to check further, we can always snap here.
-              if( elementIndex == sortedTracksList.Count - 1 ) {
+                // The right edge of the element is right of our proposed start. So this is at least the first one we intersect with.
+                // So we'll move our proposed start at the end of that element. However, this could cause another collision at the end of our element.
+                proposedStart = sortedTracksList[ elementIndex ].End;
+
+                // Are we at the last element? Then there's no need to check further, we can always snap here.
+                if( elementIndex == sortedTracksList.Count - 1 ) {
+                  break;
+                }
+
+                // Does the next element in line collide with the end of our selected track?
+                if( sortedTracksList[ elementIndex + 1 ].Start < proposedStart + length ) {
+                  continue;
+                }
+
                 break;
               }
 
-              // Does the next element in line collide with the end of our selected track?
-              if( sortedTracksList[ elementIndex + 1 ].Start < proposedStart + length ) {
-                continue;
-              }
+            } else if( delta.X > 0 ) {
+              // If delta points right, walk the sorted tracks from the right and do the same thing as above.
+              for( int elementIndex = sortedTracksList.Count() - 1; elementIndex >= 0; elementIndex-- ) {
+                // If the left edge of the element is right of our proposed end, then it's too far right to be interesting.
+                if( sortedTracksList[ elementIndex ].Start > proposedStart + length ) {
+                  continue;
+                }
 
-              break;
-            }
+                // The left edge of the element is left of our proposed end. So this is at least the first one we intersect with.
+                // So we'll move our proposed end at the start of that element. However, this could cause another collision at the start of our element.
+                proposedStart = sortedTracksList[ elementIndex ].Start - length;
 
-          } else if( delta.X > 0 ) {
-            // If delta points right, walk the sorted tracks from the right and do the same thing as above.
-            for( int elementIndex = sortedTracksList.Count() - 1; elementIndex >= 0; elementIndex-- ) {
-              // If the left edge of the element is right of our proposed end, then it's too far right to be interesting.
-              if( sortedTracksList[ elementIndex ].Start > proposedStart + length ) {
-                continue;
-              }
+                // Are we at the first element? Then there's no need to check further, we can always snap here.
+                // We can always snap because we're moving right and this is the first element that is not ourself.
+                // So we were placed in front of it anyway and we're now just moving closer to it.
+                if( elementIndex == 0 ) {
+                  break;
+                }
 
-              // The left edge of the element is left of our proposed end. So this is at least the first one we intersect with.
-              // So we'll move our proposed end at the start of that element. However, this could cause another collision at the start of our element.
-              proposedStart = sortedTracksList[ elementIndex ].Start - length;
+                // Does the next element in line collide with the start of our selected track?
+                if( sortedTracksList[ elementIndex - 1 ].End > proposedStart ) {
+                  continue;
+                }
 
-              // Are we at the first element? Then there's no need to check further, we can always snap here.
-              // We can always snap because we're moving right and this is the first element that is not ourself.
-              // So we were placed in front of it anyway and we're now just moving closer to it.
-              if( elementIndex == 0 ) {
                 break;
               }
+            }
 
-              // Does the next element in line collide with the start of our selected track?
-              if( sortedTracksList[ elementIndex - 1 ].End > proposedStart ) {
-                continue;
-              }
-
-              break;
+            if( delta.X < 0 ) {
+              delta.X = Math.Max( delta.X, ( proposedStart - selectedTrack.SubstituteFor.Start ) * _renderingScale.X );
+            } else {
+              delta.X = Math.Min( delta.X, ( proposedStart - selectedTrack.SubstituteFor.Start ) * _renderingScale.X );
             }
           }
 
-          if( delta.X < 0 ) {
-            delta.X = Math.Max( delta.X, ( proposedStart - selectedTrack.SubstituteFor.Start ) * _renderingScale.X );
-          } else {
-            delta.X = Math.Min( delta.X, ( proposedStart - selectedTrack.SubstituteFor.Start ) * _renderingScale.X );
+          // If the delta is nearing zero, bail out.
+          if( Math.Abs( delta.X ) < 0.001f ) {
+            delta.X = 0;
+            return delta;
           }
         }
-
-        // If the delta is nearing zero, bail out.
-        if( Math.Abs( delta.X ) < 0.001f ) {
-          delta.X = 0;
-          return delta;
-        }
-      }
+      } while( !lastDelta.Equals( delta ) );
 
       return delta;
     }
