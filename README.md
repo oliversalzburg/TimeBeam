@@ -22,6 +22,11 @@ If you hold <kbd>Alt</kbd>, anything that is *contained* within the selection re
 Holding <kbd>Ctrl</kbd> allows you pick single tracks in and out of the selection.  
 Clicking the labels at the start of a track will select all track elements on that track.
 
+### Resizing / Moving
+When grabbing a track item near the left or right edge and dragging that edge, the start or end of that track item is moved respectively.  
+When grabbing the track at any other place, the whole track item is moved.  
+Both resizing and moving operations always snap to full units, unless <kbd>Alt</kbd> is being held.
+
 ---
 
 ### Older screenshots

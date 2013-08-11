@@ -681,6 +681,10 @@ namespace TimeBeam {
 
             // Calculate the proposed new start for the track depending on the given delta.
             float proposedStart = Math.Max( 0, selectedTrack.SubstituteFor.Start + ( delta.X * ( 1 / _renderingScale.X ) ) );
+            // Snap to next full value
+            if( !IsKeyDown( Keys.Alt ) ) {
+              proposedStart = (float)Math.Round( proposedStart );
+            }
 
             selectedTrack.Start = proposedStart;
             selectedTrack.End = proposedStart + length;
@@ -707,11 +711,19 @@ namespace TimeBeam {
               // Adjust the delta so that all selected tracks can be resized without collisions.
               delta = AcceptableResizingDelta( delta, true );
               proposedStart = Math.Max( 0, proposedStart + delta.X * ( 1 / _renderingScale.X ) );
+              // Snap to next full value
+              if( !IsKeyDown( Keys.Alt ) ) {
+                proposedStart = (float)Math.Round( proposedStart );
+              }
 
             } else if( ( _activeEdge & RectangleHelper.Edge.Right ) != 0 ) {
               // Adjust the delta so that all selected tracks can be resized without collisions.
               delta = AcceptableResizingDelta( delta, false );
               proposedEnd = Math.Max( 0, proposedEnd + ( delta.X * ( 1 / _renderingScale.X ) ) );
+              // Snap to next full value
+              if( !IsKeyDown( Keys.Alt ) ) {
+                proposedEnd = (float)Math.Round( proposedEnd );
+              }
             }
 
             selectedTrack.Start = proposedStart;
