@@ -470,7 +470,7 @@ namespace TimeBeam {
       // Calculate the Y position of the first line.
       int firstLineY = (int)( TrackHeight * _renderingScale.Y + trackAreaBounds.Y + _renderingOffset.Y );
       // Calculate the distance between each following line.
-      int actualRowHeight = (int)( ( TrackHeight + TrackSpacing ) * _renderingScale.Y );
+      int actualRowHeight = (int)( ( TrackHeight ) * _renderingScale.Y + TrackSpacing );
       actualRowHeight = Math.Max( 1, actualRowHeight );
       // Draw the actual lines.
       for( int y = firstLineY; y < Height; y += actualRowHeight ) {
@@ -1234,8 +1234,6 @@ namespace TimeBeam {
       base.OnMouseWheel( e );
 
       if( IsKeyDown( Keys.Alt ) ) {
-        // Zooming does not require a Redraw() call, as scrolling will fire off a Scroll event which will then cause a redraw anyway.
-
         // If Alt is down, we're zooming.
         float amount = e.Delta / 1200f;
         Rectangle trackAreaBounds = GetTrackAreaBounds();
@@ -1269,8 +1267,6 @@ namespace TimeBeam {
         RecalculateScrollbarBounds();
 
       } else {
-        // Scrolling does not require a Redraw() call, as scrolling will fire off a Scroll event which will then cause a redraw anyway.
-
         // If Alt isn't down, we're scrolling/panning.
         if( IsKeyDown( Keys.Control ) ) {
           // If Ctrl is down, we're scrolling horizontally.

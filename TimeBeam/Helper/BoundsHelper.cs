@@ -27,7 +27,7 @@ namespace TimeBeam.Helper {
     internal static RectangleF RectangleToTrackExtents( RectangleF rect, Timeline timeline, int assumedTrackIndex ) {
       Rectangle trackAreaBounds = timeline.GetTrackAreaBounds();
 
-      int actualRowHeight = (int)( ( timeline.TrackHeight + timeline.TrackSpacing ) * timeline.RenderingScale.Y );
+      int actualRowHeight = (int)( ( timeline.TrackHeight ) * timeline.RenderingScale.Y + timeline.TrackSpacing );
       // Calculate the Y offset for the track.
       int trackOffsetY = (int)( trackAreaBounds.Y + ( actualRowHeight * assumedTrackIndex ) + timeline.RenderingOffset.Y );
 
