@@ -312,6 +312,8 @@ namespace TimeBeam {
     private void RecalculateScrollbarBounds() {
       ScrollbarV.Max = (int)( ( _tracks.Count * ( TrackHeight + TrackSpacing ) ) * _renderingScale.Y );
       ScrollbarH.Max = (int)( _tracks.Max( t => t.TrackElements.Max( te => te.End ) ) * _renderingScale.X );
+      ScrollbarV.Refresh();
+      ScrollbarH.Refresh();
     }
 
     /// <summary>
@@ -450,6 +452,9 @@ namespace TimeBeam {
       DrawTrackLabels( graphics );
 
       DrawPlayhead( graphics );
+
+      ScrollbarH.Refresh();
+      ScrollbarV.Refresh();
     }
 
     /// <summary>
@@ -1143,7 +1148,6 @@ namespace TimeBeam {
           _trackSurrogates.Clear();
 
           RecalculateScrollbarBounds();
-
         }
 
         // Reset cursor
