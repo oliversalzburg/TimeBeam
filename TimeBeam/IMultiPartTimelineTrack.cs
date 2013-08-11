@@ -11,14 +11,19 @@ namespace TimeBeam {
     IEnumerable<ITimelineTrack> TrackElements { get; }
 
     /// <summary>
-    /// The name of the track.
-    /// This will be displayed alongside the track in the timeline.
+    ///   The name of the track.
+    ///   This will be displayed alongside the track in the timeline.
     /// </summary>
     string Name { get; set; }
 
     /// <summary>
-    /// Invoked when the user selects this item.
+    ///   Invoked when the user selects this item.
     /// </summary>
     void Selected();
+
+    /// <summary>
+    ///   Invoked when the item was removed from the selection.
+    /// </summary>
+    void Deselected();
   }
 }

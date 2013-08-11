@@ -47,7 +47,11 @@
     ///   Invoked when the user selects this item.
     /// </summary>
     public void Selected() {
-      // Nothing to do
+      // Nothing to do.
+    }
+
+    public void Deselected() {
+      // Nothing to do.
     }
   }
 }
