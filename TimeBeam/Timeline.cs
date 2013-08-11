@@ -429,6 +429,18 @@ namespace TimeBeam {
 
       return ( ( keys & key ) != 0 );
     }
+
+    /// <summary>
+    ///   Set the clock to a position that relates to a given position on the playhead area.
+    ///   Current rendering offset and scale will be taken into account.
+    /// </summary>
+    /// <param name="location">The location on the playhead area.</param>
+    private void SetClockFromMousePosition( PointF location ) {
+      Rectangle trackAreaBounds = GetTrackAreaBounds();
+      // Calculate a clock value for the current X coordinate.
+      float clockValue = ( location.X - _renderingOffset.X - trackAreaBounds.X ) * ( 1 / _renderingScale.X ) * 1000f;
+      Clock.Value = clockValue;
+    }
     #endregion
 
     #region Drawing Methods
@@ -818,10 +830,8 @@ namespace TimeBeam {
           }
 
         } else if( CurrentMode == BehaviorMode.TimeScrub ) {
-          Rectangle trackAreaBounds = GetTrackAreaBounds();
-          // Calculate a clock value for the current X coordinate.
-          float clockValue = ( location.X - _renderingOffset.X - trackAreaBounds.X ) * ( 1 / _renderingScale.X ) * 1000f;
-          Clock.Value = clockValue;
+          SetClockFromMousePosition( location );
+          Invalidate();
         }
 
       } else if( ( e.Button & MouseButtons.Middle ) != 0 ) {
@@ -1033,6 +1043,7 @@ namespace TimeBeam {
 
         } else if( location.Y < _playheadExtents.Height ) {
           CurrentMode = BehaviorMode.TimeScrub;
+          SetClockFromMousePosition( location );
 
         } else {
           // Clear the selection, unless the user is picking
