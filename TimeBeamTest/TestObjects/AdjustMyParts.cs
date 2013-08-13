@@ -12,14 +12,6 @@ namespace TimeBeamTest.TestObjects {
 
     public string Name { get; set; }
 
-    public void Selected() {
-      Debug.WriteLine( "Selected: " + this );
-    }
-
-    public void Deselected() {
-      Debug.WriteLine( "Deselected: " + this );
-    }
-
     public AdjustMyParts( float distanceBetweenParts ) {
       for( int partIndex = 0; partIndex < 10; partIndex++ ) {
         AdjustMyLength part = new AdjustMyLength {

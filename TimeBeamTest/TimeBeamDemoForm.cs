@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using TimeBeam;
+using TimeBeam.Events;
 using TimeBeam.Timing;
 using TimeBeamTest.TestObjects;
 
@@ -38,10 +39,25 @@ namespace TimeBeamTest {
       timeline1.AddTrack( new  AdjustMyParts(20){Name="Visible"} );
       timeline1.AddTrack( new  AdjustMyParts(0){Name="Visible"} );
 
+      timeline1.SelectionChanged += TimelineSelectionChanged;
+
       // Register the clock with the timeline
       timeline1.Clock = _clock;
       // Activate the timer that invokes the clock to update.
       timer1.Enabled = true;
+    }
+
+    private void TimelineSelectionChanged( object sender, SelectionChangedEventArgs selectionChangedEventArgs ) {
+      if( null != selectionChangedEventArgs.Deselected ) {
+        foreach( ITimelineTrackBase track in selectionChangedEventArgs.Deselected ) {
+          Debug.WriteLine( "Deselected: " + track );
+        }
+      }
+      if( null != selectionChangedEventArgs.Selected ) {
+        foreach( ITimelineTrackBase track in selectionChangedEventArgs.Selected ) {
+          Debug.WriteLine( "Selected: " + track );
+        }
+      }
     }
 
     private void timer1_Tick( object sender, EventArgs e ) {

@@ -11,14 +11,6 @@ namespace TimeBeamTest.TestObjects {
     public float End { get; set; }
     public string Name { get; set; }
 
-    public void Selected() {
-      Debug.WriteLine( "Selected: " + this );
-    }
-
-    public void Deselected() {
-      Debug.WriteLine( "Deselected: " + this );
-    }
-
     public override string ToString() {
       return string.Format( "Name: {0}, End: {1}, Start: {2}", Name, End, Start );
     }
