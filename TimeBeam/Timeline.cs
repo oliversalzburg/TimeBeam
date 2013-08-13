@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
+using TimeBeam.Events;
 using TimeBeam.Helper;
 using TimeBeam.Surrogates;
 using TimeBeam.Timing;
@@ -19,6 +20,25 @@ namespace TimeBeam {
     ///   Technically, this defines the length of the movement vector.
     /// </summary>
     private const float DraggingThreshold = 3f;
+
+    #region Events
+    /// <summary>
+    ///   Invoked when the selection of track elements changed.
+    ///   Inspect <see cref="SelectedTracks"/> to see the current selection.
+    /// </summary>
+    public EventHandler<SelectionChangedEventArgs> SelectionChanged;
+
+    /// <summary>
+    ///   Invoke the <see cref="SelectionChanged" /> event.
+    /// </summary>
+    /// <param name="eventArgs">The arguments to pass with the event.</param>
+    private void InvokeSelectionChanged( SelectionChangedEventArgs eventArgs = null ) {
+      if( null != SelectionChanged ) {
+        SelectionChanged.Invoke( this, eventArgs ?? SelectionChangedEventArgs.Empty );
+      }
+    }
+    #endregion
+
 
     #region Layout
     /// <summary>
@@ -154,6 +174,11 @@ namespace TimeBeam {
     ///   The currently selected tracks.
     /// </summary>
     private readonly List<ITimelineTrack> _selectedTracks = new List<ITimelineTrack>();
+
+    /// <summary>
+    ///   Which tracks are currently selected?
+    /// </summary>
+    public IEnumerable<ITimelineTrack> SelectedTracks { get { return _selectedTracks; } }
     #endregion
 
     #region Interaction
@@ -1047,10 +1072,10 @@ namespace TimeBeam {
           // Was this track already selected?
           if( !_selectedTracks.Contains( focusedTrack ) ) {
             // Tell the track that it was selected.
-            focusedTrack.Selected();
+            InvokeSelectionChanged( new SelectionChangedEventArgs( focusedTrack.Yield(), null ) );
             // Clear the selection, unless the user is picking
             if( !IsKeyDown( Keys.Control ) ) {
-              _selectedTracks.ForEach( t => t.Deselected() );
+              InvokeSelectionChanged( new SelectionChangedEventArgs( null, _selectedTracks ) );
               _selectedTracks.Clear();
             }
 
@@ -1061,7 +1086,7 @@ namespace TimeBeam {
             // then the user is picking and we want to remove the track from the selection
           } else if( IsKeyDown( Keys.Control ) ) {
             _selectedTracks.Remove( focusedTrack );
-            focusedTrack.Deselected();
+            InvokeSelectionChanged( new SelectionChangedEventArgs( null, focusedTrack.Yield() ) );
           }
 
           // Store the current mouse position. It'll be used later to calculate the movement delta.
@@ -1084,7 +1109,7 @@ namespace TimeBeam {
         } else {
           // Clear the selection, unless the user is picking
           if( !IsKeyDown( Keys.Control ) ) {
-            _selectedTracks.ForEach( t => t.Deselected() );
+            InvokeSelectionChanged( new SelectionChangedEventArgs( null, _selectedTracks ) );
             _selectedTracks.Clear();
           }
 
@@ -1122,17 +1147,17 @@ namespace TimeBeam {
             // SingleTrackToMultiTrackWrapper instances are implicitly created by the timeline itself.
             // There is no need to invoke the method, as the single track element it contains will be notified by the loop below.
             if( !( track is SingleTrackToMultiTrackWrapper ) ) {
-              track.Selected();
+              InvokeSelectionChanged( new SelectionChangedEventArgs( track.Yield(), null ) );
             }
 
             foreach( ITimelineTrack trackElement in track.TrackElements ) {
               // Toggle track in and out of selection.
               if( _selectedTracks.Contains( trackElement ) ) {
                 _selectedTracks.Remove( trackElement );
-                trackElement.Deselected();
+                InvokeSelectionChanged( new SelectionChangedEventArgs( null, trackElement.Yield() ) );
               } else {
                 _selectedTracks.Add( trackElement );
-                trackElement.Selected();
+                InvokeSelectionChanged( new SelectionChangedEventArgs( trackElement.Yield(), null ) );
               }
             }
 
@@ -1149,10 +1174,10 @@ namespace TimeBeam {
                 // Toggle track in and out of selection.
                 if( _selectedTracks.Contains( track ) ) {
                   _selectedTracks.Remove( track );
-                  track.Deselected();
+                  InvokeSelectionChanged( new SelectionChangedEventArgs( null, track.Yield() ) );
                 } else {
                   _selectedTracks.Add( track );
-                  track.Selected();
+                  InvokeSelectionChanged( new SelectionChangedEventArgs( track.Yield(), null ) );
                 }
               }
             }
@@ -1194,17 +1219,17 @@ namespace TimeBeam {
 
       if( e.KeyCode == Keys.A && IsKeyDown( Keys.Control ) ) {
         // Ctrl+A - Select all
-        _selectedTracks.ForEach( t => t.Deselected() );
+        InvokeSelectionChanged( new SelectionChangedEventArgs( null, _selectedTracks ) );
         _selectedTracks.Clear();
         foreach( ITimelineTrack track in _tracks.SelectMany( t => t.TrackElements ) ) {
           _selectedTracks.Add( track );
-          track.Selected();
         }
+        InvokeSelectionChanged( new SelectionChangedEventArgs( _selectedTracks, null ) );
         Invalidate();
 
       } else if( e.KeyCode == Keys.D && IsKeyDown( Keys.Control ) ) {
         // Ctrl+D - Deselect all
-        _selectedTracks.ForEach( t => t.Deselected() );
+        InvokeSelectionChanged( new SelectionChangedEventArgs( null, _selectedTracks ) );
         _selectedTracks.Clear();
         Invalidate();
       }

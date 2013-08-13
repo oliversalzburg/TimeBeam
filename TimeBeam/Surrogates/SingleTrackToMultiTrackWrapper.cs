@@ -29,20 +29,6 @@ namespace TimeBeam.Surrogates {
     }
 
     /// <summary>
-    ///   Invoked when the user selects this item.
-    /// </summary>
-    public void Selected() {
-      _wrappedTrack.Selected();
-    }
-
-    /// <summary>
-    ///   Invoked when the item was removed from the selection.
-    /// </summary>
-    public void Deselected() {
-      _wrappedTrack.Deselected();
-    }
-
-    /// <summary>
     ///   Construct a new SingleTrackToMultiTrackWrapper.
     /// </summary>
     /// <param name="track">The timeline track that should be wrapped.</param>
