@@ -311,7 +311,7 @@ namespace TimeBeam {
     /// </summary>
     private void RecalculateScrollbarBounds() {
       ScrollbarV.Max = (int)( ( _tracks.Count * ( TrackHeight + TrackSpacing ) ) * _renderingScale.Y );
-      ScrollbarH.Max = (int)( _tracks.Max( t => t.TrackElements.Max( te => te.End ) ) * _renderingScale.X );
+      ScrollbarH.Max = (int)( _tracks.Max( t => t.TrackElements.Any() ? t.TrackElements.Max( te => te.End ) : 0 ) * _renderingScale.X );
       ScrollbarV.Refresh();
       ScrollbarH.Refresh();
     }
@@ -581,6 +581,7 @@ namespace TimeBeam {
     /// </summary>
     private void DrawTrackLabels( Graphics graphics ) {
       foreach( IMultiPartTimelineTrack track in _tracks ) {
+        if( !track.TrackElements.Any() ) continue;
         // We just need the height and Y-offset, so we get the extents of the first track
         RectangleF trackExtents = BoundsHelper.GetTrackExtents( track.TrackElements.First(), this );
         RectangleF labelRect = new RectangleF( 0, trackExtents.Y, TrackLabelWidth, trackExtents.Height );

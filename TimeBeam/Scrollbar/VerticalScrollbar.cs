@@ -47,6 +47,9 @@ namespace TimeBeam.Scrollbar {
     /// <param name="value">A given value within the defined bounds.</param>
     /// <returns>The center point of the thumb for the given value.</returns>
     private int ValueToPosition( int value ) {
+      int range = ( Max - Min );
+      if( 0 == range ) return 0;
+
       // Start by defining the value on a scale of 0 to 1.
       float relativeValue = (float)value / ( Max - Min );
       // Subtract 0.5 to get the offset for our value from the center of the bar
