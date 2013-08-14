@@ -89,6 +89,12 @@
     <Compile Include="Scrollbar\AbstractScrollbar.Designer.cs">
       <DependentUpon>AbstractScrollbar.cs</DependentUpon>
     </Compile>
+    <Compile Include="Splineline.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Splineline.Designer.cs">
+      <DependentUpon>Splineline.cs</DependentUpon>
+    </Compile>
     <Compile Include="Surrogates\SingleTrackToMultiTrackWrapper.cs" />
     <Compile Include="Surrogates\TrackSurrogate.cs" />
     <Compile Include="Timeline.cs">
@@ -96,6 +102,12 @@
     </Compile>
     <Compile Include="Timeline.Designer.cs">
       <DependentUpon>Timeline.cs</DependentUpon>
+    </Compile>
+    <Compile Include="TimelineBase.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="TimelineBase.Designer.cs">
+      <DependentUpon>TimelineBase.cs</DependentUpon>
     </Compile>
     <Compile Include="Timing\IClock.cs" />
   </ItemGroup>
@@ -116,7 +128,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.TimeStamp" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_UpdateFileVersion="True" BuildVersion_AssemblyInfoFilename="TimeBeam\Properties\AssemblyInfo.cs" />
+      <UserProperties BuildVersion_AssemblyInfoFilename="TimeBeam\Properties\AssemblyInfo.cs" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_BuildVersioningStyle="None.None.Increment.TimeStamp" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

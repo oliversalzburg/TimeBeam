@@ -3,6 +3,10 @@ using System.Drawing;
 using System.Linq;
 
 namespace TimeBeam.Helper {
+  /// <summary>
+  ///   Contains methods that help in calculation regarding the bounding area of
+  ///   elements.
+  /// </summary>
   internal static class BoundsHelper {
     /// <summary>
     ///   Calculate the bounding rectangle for a track in screen-space.
@@ -12,7 +16,7 @@ namespace TimeBeam.Helper {
     /// </param>
     /// <param name="timeline">The timeline the track lives on.</param>
     /// <returns>The bounding rectangle for the given track.</returns>
-    internal static RectangleF GetTrackExtents( ITimelineTrack track, Timeline timeline ) {
+    internal static RectangleF GetTrackExtents( ITimelineTrack track, TimelineBase timeline ) {
       int trackIndex = timeline.TrackIndexForTrack( track );
       return RectangleToTrackExtents( new RectangleF( track.Start, 0, track.End - track.Start, 0 ), timeline, trackIndex );
     }
@@ -24,7 +28,7 @@ namespace TimeBeam.Helper {
     /// <param name="timeline">The timeline the assumed track would live on. Used to determine the top and bottom edge of the bounding rectangle.</param>
     /// <param name="assumedTrackIndex">The assumed index of the track. Used to determine the top edge of the bounding rectangle.</param>
     /// <returns>A bounding rectangle that would hold a track of the same extents as the given rectangle.</returns>
-    internal static RectangleF RectangleToTrackExtents( RectangleF rect, Timeline timeline, int assumedTrackIndex ) {
+    internal static RectangleF RectangleToTrackExtents( RectangleF rect, TimelineBase timeline, int assumedTrackIndex ) {
       Rectangle trackAreaBounds = timeline.GetTrackAreaBounds();
 
       int actualRowHeight = (int)( ( timeline.TrackHeight ) * timeline.RenderingScale.Y + timeline.TrackSpacing );

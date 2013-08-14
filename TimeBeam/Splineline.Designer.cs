@@ -2,7 +2,7 @@
 using System.Windows.Forms;
 
 namespace TimeBeam {
-  partial class Timeline {
+  partial class Splineline {
     /// <summary> 
     /// Required designer variable.
     /// </summary>
@@ -30,7 +30,6 @@ namespace TimeBeam {
       // 
       // Timeline
       // 
-      this.DoubleBuffered = true;
       this.Name = "Timeline";
       this.Size = new System.Drawing.Size(800, 200);
       this.ResumeLayout(false);
