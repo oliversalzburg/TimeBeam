@@ -354,9 +354,9 @@ namespace TimeBeam {
       // Start at the top (later, we'll deduct the playhead and time label height)
       trackArea.Y = (int)_playheadExtents.Height;
       // Deduct scrollbar width.
-      trackArea.Width = Width - ScrollbarV.Width;
+      trackArea.Width = Width - ( ScrollbarV.Width + TrackLabelWidth );
       // Deduct scrollbar height.
-      trackArea.Height = Height - ScrollbarH.Height;
+      trackArea.Height = Height - ( ScrollbarH.Height + (int)_playheadExtents.Height );
 
       return trackArea;
     }
@@ -455,7 +455,7 @@ namespace TimeBeam {
     private void SetClockFromMousePosition( PointF location ) {
       Rectangle trackAreaBounds = GetTrackAreaBounds();
       // Calculate a clock value for the current X coordinate.
-      float clockValue = ( location.X - _renderingOffset.X - trackAreaBounds.X ) * ( 1 / _renderingScale.X ) * 1000f;
+      float clockValue = ( location.X - _renderingOffset.X - trackAreaBounds.Left ) * ( 1 / _renderingScale.X ) * 1000f;
       Clock.Value = clockValue;
     }
     #endregion
@@ -465,6 +465,9 @@ namespace TimeBeam {
     ///   Redraws the timeline.
     ///   Should only be called from WM_PAINT aka OnPaint.
     /// </summary>
+    /// <param name="graphics">
+    ///   The <see cref="Graphics" /> instance to draw into.
+    /// </param>
     private void Redraw( Graphics graphics ) {
       // Clear the buffer
       graphics.Clear( BackgroundColor );
@@ -486,7 +489,10 @@ namespace TimeBeam {
     /// <summary>
     ///   Draws the background of the control.
     /// </summary>
-    private void DrawBackground( Graphics graphics ) {
+    /// <param name="graphics">
+    ///   The <see cref="Graphics" /> instance to draw into.
+    /// </param>
+    protected virtual void DrawBackground( Graphics graphics ) {
 
       Rectangle trackAreaBounds = GetTrackAreaBounds();
 
@@ -500,7 +506,7 @@ namespace TimeBeam {
       actualRowHeight = Math.Max( 1, actualRowHeight );
       // Draw the actual lines.
       for( int y = firstLineY; y < Height; y += actualRowHeight ) {
-        graphics.DrawLine( gridPen, trackAreaBounds.X, y, trackAreaBounds.Width, y );
+        graphics.DrawLine( gridPen, trackAreaBounds.Left, y, trackAreaBounds.Right, y );
       }
 
       // The distance between the minor ticks.
@@ -528,7 +534,7 @@ namespace TimeBeam {
           DashStyle = DashStyle.Dot
         } ) {
           for( float x = minorTickOffset; x < Width; x += minorTickDistance ) {
-            graphics.DrawLine( minorGridPen, trackAreaBounds.X + x, trackAreaBounds.Y, trackAreaBounds.X + x, trackAreaBounds.Height );
+            graphics.DrawLine( minorGridPen, trackAreaBounds.X + x, trackAreaBounds.Top, trackAreaBounds.X + x, trackAreaBounds.Bottom );
           }
         }
       }
@@ -548,7 +554,7 @@ namespace TimeBeam {
           penToUse = brightPen;
         }
 
-        graphics.DrawLine( penToUse, trackAreaBounds.X + x, trackAreaBounds.Y, trackAreaBounds.X + x, trackAreaBounds.Height );
+        graphics.DrawLine( penToUse, trackAreaBounds.X + x, trackAreaBounds.Top, trackAreaBounds.X + x, trackAreaBounds.Bottom );
       }
 
       gridPen.Dispose();
@@ -559,6 +565,9 @@ namespace TimeBeam {
     ///   Draw a list of tracks onto the timeline.
     /// </summary>
     /// <param name="tracks">The tracks to draw.</param>
+    /// <param name="graphics">
+    ///   The <see cref="Graphics" /> instance to draw into.
+    /// </param>
     protected virtual void DrawTracks( IEnumerable<ITrackSegment> tracks, Graphics graphics ) {
 
       Rectangle trackAreaBounds = GetTrackAreaBounds();
@@ -607,6 +616,9 @@ namespace TimeBeam {
     /// <summary>
     ///   Draw the labels next to each track.
     /// </summary>
+    /// <param name="graphics">
+    ///   The <see cref="Graphics" /> instance to draw into.
+    /// </param>
     private void DrawTrackLabels( Graphics graphics ) {
       foreach( ITrack track in _tracks ) {
         if( !track.TrackElements.Any() ) {
@@ -624,6 +636,9 @@ namespace TimeBeam {
     ///   Draw a playhead on the timeline.
     ///   The playhead indicates a time value.
     /// </summary>
+    /// <param name="graphics">
+    ///   The <see cref="Graphics" /> instance to draw into.
+    /// </param>
     private void DrawPlayhead( Graphics graphics ) {
       // Only draw a playhead if we have a clock set.
       if( null != Clock ) {
@@ -635,12 +650,12 @@ namespace TimeBeam {
 
         float playheadOffset = (float)( trackAreaBounds.X + ( Clock.Value * 0.001f ) * _renderingScale.X ) + _renderingOffset.X;
         // Don't draw when not in view.
-        if( playheadOffset < trackAreaBounds.X || playheadOffset > trackAreaBounds.X + trackAreaBounds.Width ) {
+        if( playheadOffset < trackAreaBounds.Left || playheadOffset > trackAreaBounds.Right ) {
           return;
         }
 
         // Draw the playhead as a single line.
-        graphics.DrawLine( Pens.SpringGreen, playheadOffset, trackAreaBounds.Y, playheadOffset, trackAreaBounds.Height );
+        graphics.DrawLine( Pens.SpringGreen, playheadOffset, trackAreaBounds.Y, playheadOffset, trackAreaBounds.Bottom );
 
         graphics.FillRectangle( Brushes.SpringGreen, playheadOffset - _playheadExtents.Width / 2, 0, _playheadExtents.Width, _playheadExtents.Height );
       }
@@ -649,6 +664,9 @@ namespace TimeBeam {
     /// <summary>
     ///   Draws the selection rectangle the user is drawing.
     /// </summary>
+    /// <param name="graphics">
+    ///   The <see cref="Graphics" /> instance to draw into.
+    /// </param>
     private void DrawSelectionRectangle( Graphics graphics ) {
       graphics.DrawRectangle(
         new Pen( Color.LightGray, 1 ) {
@@ -1271,6 +1289,8 @@ namespace TimeBeam {
     protected override void OnMouseWheel( MouseEventArgs e ) {
       base.OnMouseWheel( e );
 
+      Focus();
+
       if( IsKeyDown( Keys.Alt ) ) {
         // If Alt is down, we're zooming.
         float amount = e.Delta / 1200f;
@@ -1283,7 +1303,7 @@ namespace TimeBeam {
           _renderingScale.X = Math.Max( 0.01f, _renderingScale.X );
 
           // We now also need to move the rendering offset so that the center of focus stays at the mouse cursor.
-          _renderingOffset.X -= trackAreaBounds.Width * ( ( e.Location.X - trackAreaBounds.X ) / (float)trackAreaBounds.Width ) * amount;
+          _renderingOffset.X -= trackAreaBounds.Width * ( ( e.Location.X - trackAreaBounds.Left ) / (float)trackAreaBounds.Width ) * amount;
           _renderingOffset.X = Math.Min( 0, _renderingOffset.X );
 
           // Update scrollbar position.
@@ -1296,11 +1316,12 @@ namespace TimeBeam {
           _renderingScale.Y = Math.Max( 0.01f, _renderingScale.Y );
 
           // We now also need to move the rendering offset so that the center of focus stays at the mouse cursor.
-          _renderingOffset.Y -= trackAreaBounds.Height * ( ( e.Location.Y - trackAreaBounds.Y ) / (float)trackAreaBounds.Height ) * amount;
+          _renderingOffset.Y -= trackAreaBounds.Height * ( ( e.Location.Y - trackAreaBounds.Top ) / (float)trackAreaBounds.Height ) * amount;
           _renderingOffset.Y = Math.Min( 0, _renderingOffset.Y );
 
           // Update scrollbar position.
           ScrollbarV.Value = (int)( -_renderingOffset.Y );
+
         }
         RecalculateScrollbarBounds();
 
