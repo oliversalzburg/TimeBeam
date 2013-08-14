@@ -6,7 +6,7 @@ using System.Text;
 using TimeBeam;
 
 namespace TimeBeamTest.TestObjects {
-  class AdjustMyLength : ITimelineTrack {
+  class AdjustMyLength : ITrackSegment {
     public float Start { get; set; }
     public float End { get; set; }
     public string Name { get; set; }

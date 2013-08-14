@@ -10,19 +10,19 @@ namespace TimeBeam.Events {
     /// <summary>
     ///   The tracks that were selected in the operation.
     /// </summary>
-    public IEnumerable<ITimelineTrackBase> Selected { get; private set; }
+    public IEnumerable<ITrackBase> Selected { get; private set; }
 
     /// <summary>
     ///   The track elements that were deselected in the operation.
     /// </summary>
-    public IEnumerable<ITimelineTrackBase> Deselected { get; private set; }
+    public IEnumerable<ITrackBase> Deselected { get; private set; }
 
     /// <summary>
     ///   Construct a new SelectionChangedEventArgs instance.
     /// </summary>
     /// <param name="selected">The track elements that were deselected in the operation.</param>
     /// <param name="deselected">The tracks that were selected in the operation.</param>
-    public SelectionChangedEventArgs( IEnumerable<ITimelineTrackBase> selected, IEnumerable<ITimelineTrackBase> deselected ) {
+    public SelectionChangedEventArgs( IEnumerable<ITrackBase> selected, IEnumerable<ITrackBase> deselected ) {
       Selected = selected;
       Deselected = deselected;
     }

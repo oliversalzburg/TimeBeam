@@ -1,12 +1,12 @@
 ﻿namespace TimeBeam.Surrogates {
   /// <summary>
-  ///   A substitute for another track on the timeline.
+  ///   A substitute for another track segment on the timeline.
   /// </summary>
-  internal class TrackSurrogate : ITimelineTrack {
+  internal class TrackSegmentSurrogate : ITrackSegment {
     /// <summary>
     ///   The object this surrogate is a substitute for.
     /// </summary>
-    public ITimelineTrack SubstituteFor { get; set; }
+    public ITrackSegment SubstituteFor { get; set; }
 
     /// <summary>
     ///   The beginning of the item.
@@ -24,10 +24,10 @@
     public string Name { get; set; }
 
     /// <summary>
-    ///   Construct a new surrogate for another <see cref="ITimelineTrack" />.
+    ///   Construct a new surrogate for another <see cref="ITrackSegment" />.
     /// </summary>
-    /// <param name="substituteFor">The ITimelineTrack we're substituting for.</param>
-    public TrackSurrogate( ITimelineTrack substituteFor ) {
+    /// <param name="substituteFor">The ITrackSegment we're substituting for.</param>
+    public TrackSegmentSurrogate( ITrackSegment substituteFor ) {
       SubstituteFor = substituteFor;
       Start = substituteFor.Start;
       End = substituteFor.End;
@@ -35,10 +35,10 @@
     }
 
     /// <summary>
-    ///   Copies all properties of the surrogate to another <see cref="ITimelineTrack" />.
+    ///   Copies all properties of the surrogate to another <see cref="ITrackSegment" />.
     /// </summary>
-    /// <param name="target">The target timeline track to copy the properties to.</param>
-    public void CopyTo( ITimelineTrack target ) {
+    /// <param name="target">The target track segment to copy the properties to.</param>
+    public void CopyTo( ITrackSegment target ) {
       target.Start = Start;
       target.End = End;
     }

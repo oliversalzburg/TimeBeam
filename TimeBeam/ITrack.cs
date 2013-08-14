@@ -4,10 +4,10 @@ namespace TimeBeam {
   /// <summary>
   ///   A timeline track that contains multiple parts.
   /// </summary>
-  public interface IMultiPartTimelineTrack : ITimelineTrackBase {
+  public interface ITrack : ITrackBase {
     /// <summary>
     ///   The elements within this track.
     /// </summary>
-    IEnumerable<ITimelineTrack> TrackElements { get; }
+    IEnumerable<ITrackSegment> TrackElements { get; }
   }
 }

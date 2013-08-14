@@ -2,7 +2,7 @@
   /// <summary>
   ///   Describes an item that can be placed on a track in the timeline.
   /// </summary>
-  public interface ITimelineTrack : ITimelineTrackBase {
+  public interface ITrackSegment : ITrackBase {
     /// <summary>
     ///   The beginning of the item.
     /// </summary>

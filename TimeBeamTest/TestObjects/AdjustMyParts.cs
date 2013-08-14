@@ -3,8 +3,8 @@ using System.Diagnostics;
 using TimeBeam;
 
 namespace TimeBeamTest.TestObjects {
-  internal class AdjustMyParts : IMultiPartTimelineTrack {
-    public IEnumerable<ITimelineTrack> TrackElements {
+  internal class AdjustMyParts : ITrack {
+    public IEnumerable<ITrackSegment> TrackElements {
       get { return Parts; }
     }
 

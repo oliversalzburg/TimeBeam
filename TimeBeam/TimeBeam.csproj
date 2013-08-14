@@ -67,9 +67,11 @@
     <Compile Include="Helper\RectangleHelper.cs" />
     <Compile Include="Helper\SelectionHelper.cs" />
     <Compile Include="Helper\SurrogateHelper.cs" />
-    <Compile Include="IMultiPartTimelineTrack.cs" />
-    <Compile Include="ITimelineTrack.cs" />
-    <Compile Include="ITimelineTrackBase.cs" />
+    <Compile Include="ITrack.cs" />
+    <Compile Include="ISpline.cs" />
+    <Compile Include="ISplineSegment.cs" />
+    <Compile Include="ITrackSegment.cs" />
+    <Compile Include="ITrackBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Scrollbar\VerticalScrollbar.cs">
       <SubType>UserControl</SubType>
@@ -95,8 +97,8 @@
     <Compile Include="Splineline.Designer.cs">
       <DependentUpon>Splineline.cs</DependentUpon>
     </Compile>
-    <Compile Include="Surrogates\SingleTrackToMultiTrackWrapper.cs" />
-    <Compile Include="Surrogates\TrackSurrogate.cs" />
+    <Compile Include="Surrogates\SingleElementToTrackWrapper.cs" />
+    <Compile Include="Surrogates\TrackSegmentSurrogate.cs" />
     <Compile Include="Timeline.cs">
       <SubType>Component</SubType>
     </Compile>

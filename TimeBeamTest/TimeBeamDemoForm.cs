@@ -49,12 +49,12 @@ namespace TimeBeamTest {
 
     private void TimelineSelectionChanged( object sender, SelectionChangedEventArgs selectionChangedEventArgs ) {
       if( null != selectionChangedEventArgs.Deselected ) {
-        foreach( ITimelineTrackBase track in selectionChangedEventArgs.Deselected ) {
+        foreach( ITrackBase track in selectionChangedEventArgs.Deselected ) {
           Debug.WriteLine( "Deselected: " + track );
         }
       }
       if( null != selectionChangedEventArgs.Selected ) {
-        foreach( ITimelineTrackBase track in selectionChangedEventArgs.Selected ) {
+        foreach( ITrackBase track in selectionChangedEventArgs.Selected ) {
           Debug.WriteLine( "Selected: " + track );
         }
       }

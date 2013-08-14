@@ -23,7 +23,7 @@ namespace TimeBeam {
 
     #region Events
     /// <summary>
-    ///   Invoked when the selection of track elements changed.
+    ///   Invoked when the selection of track segments changed.
     ///   Inspect <see cref="SelectedTracks"/> to see the current selection.
     /// </summary>
     public EventHandler<SelectionChangedEventArgs> SelectionChanged;
@@ -57,10 +57,10 @@ namespace TimeBeam {
     private int _trackHeight = 20;
 
     /// <summary>
-    ///   How wide/high the border on a track item should be.
+    ///   How wide/high the border on a track segment should be.
     ///   This border allows you to interact with an item.
     /// </summary>
-    [Description( "How wide/high the border on a track item should be." )]
+    [Description( "How wide/high the border on a track segment should be." )]
     [Category( "Layout" )]
     public int TrackBorderSize {
       get { return _trackBorderSize; }
@@ -168,17 +168,17 @@ namespace TimeBeam {
     /// <summary>
     ///   The tracks currently placed on the timeline.
     /// </summary>
-    private readonly List<IMultiPartTimelineTrack> _tracks = new List<IMultiPartTimelineTrack>();
+    private readonly List<ITrack> _tracks = new List<ITrack>();
 
     /// <summary>
     ///   The currently selected tracks.
     /// </summary>
-    private readonly List<ITimelineTrack> _selectedTracks = new List<ITimelineTrack>();
+    private readonly List<ITrackSegment> _selectedTracks = new List<ITrackSegment>();
 
     /// <summary>
     ///   Which tracks are currently selected?
     /// </summary>
-    public IEnumerable<ITimelineTrack> SelectedTracks { get { return _selectedTracks; } }
+    public IEnumerable<ITrackSegment> SelectedTracks { get { return _selectedTracks; } }
     #endregion
 
     #region Interaction
@@ -191,7 +191,7 @@ namespace TimeBeam {
     ///   The list of surrogates (stand-ins) for timeline tracks.
     ///   These surrogates are used as temporary placeholders during certain operations.
     /// </summary>
-    private List<ITimelineTrack> _trackSurrogates = new List<ITimelineTrack>();
+    private List<ITrackSegment> _trackSurrogates = new List<ITrackSegment>();
 
     /// <summary>
     ///   The point at where a dragging operation started.
@@ -302,20 +302,20 @@ namespace TimeBeam {
     #endregion
 
     /// <summary>
-    ///   Add a track to the timeline.
+    ///   Add a track segment to the timeline.
     /// </summary>
-    /// <param name="track">The track to add.</param>
-    public void AddTrack( ITimelineTrack track ) {
-      _tracks.Add( new SingleTrackToMultiTrackWrapper( track ) );
+    /// <param name="trackSegment">The track segment to add.</param>
+    public void AddTrack( ITrackSegment trackSegment ) {
+      _tracks.Add( new SingleElementToTrackWrapper( trackSegment ) );
       RecalculateScrollbarBounds();
       Invalidate();
     }
 
     /// <summary>
-    ///   Add a track to the timeline which contains multiple other tracks.
+    ///   Add a track to the timeline which contains multiple other track segments.
     /// </summary>
     /// <param name="track"></param>
-    public void AddTrack( IMultiPartTimelineTrack track ) {
+    public void AddTrack( ITrack track ) {
       _tracks.Add( track );
       RecalculateScrollbarBounds();
       Invalidate();
@@ -342,7 +342,7 @@ namespace TimeBeam {
     }
 
     /// <summary>
-    ///   Calculate the rectangle within which track should be drawn.
+    ///   Calculate the rectangle within which track segment should be drawn.
     /// </summary>
     /// <returns>The rectangle within which all tracks should be drawn.</returns>
     internal Rectangle GetTrackAreaBounds() {
@@ -362,15 +362,15 @@ namespace TimeBeam {
 
 
     /// <summary>
-    ///   Check if a track is located at the given position.
+    ///   Check if a track segment is located at the given position.
     /// </summary>
     /// <param name="test">The point to test for.</param>
     /// <returns>
-    ///   The <see cref="ITimelineTrack" /> if there is one under the given point; <see langword="null" /> otherwise.
+    ///   The <see cref="ITrackSegment" /> if there is one under the given point; <see langword="null" /> otherwise.
     /// </returns>
-    private ITimelineTrack TrackHitTest( PointF test ) {
-      foreach( ITimelineTrack track in _tracks.SelectMany( t => t.TrackElements ) ) {
-        // The extent of the track, including the border
+    private ITrackSegment TrackHitTest( PointF test ) {
+      foreach( ITrackSegment track in _tracks.SelectMany( t => t.TrackElements ) ) {
+        // The extent of the track segment, including the border
         RectangleF trackExtent = BoundsHelper.GetTrackExtents( track, this );
 
         if( trackExtent.Contains( test ) ) {
@@ -397,11 +397,11 @@ namespace TimeBeam {
     /// <summary>
     ///   Get the index of the track that sits at a certain point.
     /// </summary>
-    /// <param name="test">The point where to look for a track.</param>
+    /// <param name="test">The point where to look for a track segment.</param>
     /// <returns>The index of the track if one was found; -1 otherwise.</returns>
     private int TrackIndexAtPoint( PointF test ) {
       for( int index = 0; index < _tracks.Count; index++ ) {
-        IMultiPartTimelineTrack track = _tracks[ index ];
+        ITrack track = _tracks[ index ];
         RectangleF trackExtent = BoundsHelper.GetTrackExtents( track.TrackElements.First(), this );
 
         if( trackExtent.Top < test.Y && trackExtent.Bottom > test.Y ) {
@@ -556,26 +556,26 @@ namespace TimeBeam {
     ///   Draw a list of tracks onto the timeline.
     /// </summary>
     /// <param name="tracks">The tracks to draw.</param>
-    private void DrawTracks( IEnumerable<ITimelineTrack> tracks, Graphics graphics ) {
+    private void DrawTracks( IEnumerable<ITrackSegment> tracks, Graphics graphics ) {
 
       Rectangle trackAreaBounds = GetTrackAreaBounds();
 
       // Generate colors for the tracks.
       List<Color> colors = ColorHelper.GetRandomColors( _tracks.Count );
 
-      foreach( ITimelineTrack track in tracks ) {
-        // The extent of the track, including the border
+      foreach( ITrackSegment track in tracks ) {
+        // The extent of the track segment, including the border.
         RectangleF trackExtent = BoundsHelper.GetTrackExtents( track, this );
 
-        // Don't draw track elements that aren't within the target area.
+        // Don't draw track segments that aren't within the target area.
         if( !trackAreaBounds.IntersectsWith( trackExtent.ToRectangle() ) ) {
           continue;
         }
 
-        // The index of this track (or the one it's a substitute for).
+        // The index of this track segment (or the one it's a substitute for).
         int trackIndex = TrackIndexForTrack( track );
 
-        // Determine colors for this track
+        // Determine colors for this track segment.
         Color trackColor = ColorHelper.AdjustColor( colors[ trackIndex ], 0, -0.1, -0.2 );
         Color borderColor = Color.FromArgb( 128, Color.Black );
 
@@ -583,8 +583,8 @@ namespace TimeBeam {
           borderColor = Color.WhiteSmoke;
         }
 
-        // Draw the main track area.
-        if( track is TrackSurrogate ) {
+        // Draw the main track segment area.
+        if( track is TrackSegmentSurrogate ) {
           // Draw surrogates with a transparent brush.
           graphics.FillRectangle( new SolidBrush( Color.FromArgb( 128, trackColor ) ), trackExtent );
         } else {
@@ -605,9 +605,9 @@ namespace TimeBeam {
     ///   Draw the labels next to each track.
     /// </summary>
     private void DrawTrackLabels( Graphics graphics ) {
-      foreach( IMultiPartTimelineTrack track in _tracks ) {
+      foreach( ITrack track in _tracks ) {
         if( !track.TrackElements.Any() ) continue;
-        // We just need the height and Y-offset, so we get the extents of the first track
+        // We just need the height and Y-offset, so we get the extents of the first track segment.
         RectangleF trackExtents = BoundsHelper.GetTrackExtents( track.TrackElements.First(), this );
         RectangleF labelRect = new RectangleF( 0, trackExtents.Y, TrackLabelWidth, trackExtents.Height );
         graphics.FillRectangle( new SolidBrush( Color.FromArgb( 30, 30, 30 ) ), labelRect );
@@ -652,17 +652,17 @@ namespace TimeBeam {
     }
 
     /// <summary>
-    ///   Retrieve the index of a given track.
-    ///   If the track is a surrogate, returns the index of the track it's a substitute for.
+    ///   Retrieve the track index of a given track segment.
+    ///   If the track segment is a surrogate, returns the index of the track segment it's a substitute for.
     /// </summary>
-    /// <param name="track">The track for which to retrieve the index.</param>
-    /// <returns>The index of the track or the index the track is a substitute for.</returns>
-    internal int TrackIndexForTrack( ITimelineTrack track ) {
-      ITimelineTrack trackToLookFor = track;
-      if( track is TrackSurrogate ) {
-        trackToLookFor = ( (TrackSurrogate)track ).SubstituteFor;
+    /// <param name="trackSegment">The track segment for which to retrieve the index.</param>
+    /// <returns>The index of the track segment or the index the track segment is a substitute for.</returns>
+    internal int TrackIndexForTrack( ITrackSegment trackSegment ) {
+      ITrackSegment trackSegmentToLookFor = trackSegment;
+      if( trackSegment is TrackSegmentSurrogate ) {
+        trackSegmentToLookFor = ( (TrackSegmentSurrogate)trackSegment ).SubstituteFor;
       }
-      return _tracks.FindIndex( t => t.TrackElements.Contains( trackToLookFor ) );
+      return _tracks.FindIndex( t => t.TrackElements.Contains( trackSegmentToLookFor ) );
     }
     #endregion
 
@@ -686,8 +686,8 @@ namespace TimeBeam {
 
       // Store the current mouse position.
       PointF location = new PointF( e.X, e.Y );
-      // Check if there is a track at the current mouse position.
-      ITimelineTrack focusedTrack = TrackHitTest( location );
+      // Check if there is a track segment at the current mouse position.
+      ITrackSegment focusedTrackSegment = TrackHitTest( location );
 
       // Is the left mouse button pressed?
       if( ( e.Button & MouseButtons.Left ) != 0 ) {
@@ -701,11 +701,11 @@ namespace TimeBeam {
           delta = AcceptableMovementDelta( delta );
 
           // Apply the delta to all selected tracks
-          foreach( TrackSurrogate selectedTrack in _trackSurrogates ) {
-            // Store the length of this track
+          foreach( TrackSegmentSurrogate selectedTrack in _trackSurrogates ) {
+            // Store the length of this track segment
             float length = selectedTrack.SubstituteFor.End - selectedTrack.SubstituteFor.Start;
 
-            // Calculate the proposed new start for the track depending on the given delta.
+            // Calculate the proposed new start for the track segment depending on the given delta.
             float proposedStart = Math.Max( 0, selectedTrack.SubstituteFor.Start + ( delta.X * ( 1 / _renderingScale.X ) ) );
             // Snap to next full value
             if( !IsKeyDown( Keys.Alt ) ) {
@@ -726,12 +726,12 @@ namespace TimeBeam {
           // Calculate the movement delta.
           PointF delta = PointF.Subtract( location, new SizeF( _dragOrigin ) );
 
-          foreach( TrackSurrogate selectedTrack in _trackSurrogates ) {
-            // Initialize the proposed start and end with the current track values for now.
+          foreach( TrackSegmentSurrogate selectedTrack in _trackSurrogates ) {
+            // Initialize the proposed start and end with the current track segment values for now.
             float proposedStart = selectedTrack.SubstituteFor.Start;
             float proposedEnd = selectedTrack.SubstituteFor.End;
 
-            // Apply the delta to the start or end of the timeline track,
+            // Apply the delta to the start or end of the timeline track segment,
             // depending on the edge where the user originally started the resizing operation.
             if( ( _activeEdge & RectangleHelper.Edge.Left ) != 0 ) {
               // Adjust the delta so that all selected tracks can be resized without collisions.
@@ -809,8 +809,8 @@ namespace TimeBeam {
 
       } else {
         // No mouse button is being pressed
-        if( null != focusedTrack ) {
-          RectangleF trackExtents = BoundsHelper.GetTrackExtents( focusedTrack, this );
+        if( null != focusedTrackSegment ) {
+          RectangleF trackExtents = BoundsHelper.GetTrackExtents( focusedTrackSegment, this );
           RectangleHelper.Edge isPointOnEdge = RectangleHelper.IsPointOnEdge( trackExtents, location, 3f, RectangleHelper.EdgeTest.Horizontal );
 
           // Select the appropriate size cursor for the cursor position.
@@ -856,14 +856,14 @@ namespace TimeBeam {
       do {
         lastDelta = delta;
 
-        foreach( TrackSurrogate selectedTrack in _trackSurrogates ) {
-          // Store the length of this track
+        foreach( TrackSegmentSurrogate selectedTrack in _trackSurrogates ) {
+          // Store the length of this track segment
           float length = selectedTrack.SubstituteFor.End - selectedTrack.SubstituteFor.Start;
 
-          // Calculate the proposed new start for the track depending on the given delta.
+          // Calculate the proposed new start for the track segment depending on the given delta.
           float proposedStart = Math.Max( 0, selectedTrack.SubstituteFor.Start + ( delta.X * ( 1 / _renderingScale.X ) ) );
 
-          // If the movement on this track would move it to the start of the timeline,
+          // If the movement on this track segment would move it to the start of the timeline,
           // cap the movement for all tracks.
           // TODO: It could be interesting to enable this anyway through a modifier key.
           if( proposedStart <= 0 ) {
@@ -871,29 +871,29 @@ namespace TimeBeam {
             proposedStart = Math.Max( 0, selectedTrack.SubstituteFor.Start + ( delta.X * ( 1 / _renderingScale.X ) ) );
           }
 
-          // Get the index of the selected track to use it as a basis for calculating the proposed new bounding box.
+          // Get the index of the selected track segment to use it as a basis for calculating the proposed new bounding box.
           int trackIndex = TrackIndexForTrack( selectedTrack );
-          // Use the calculated values to get a full screen-space bounding box for the proposed track location.
+          // Use the calculated values to get a full screen-space bounding box for the proposed track segment location.
           RectangleF proposed = BoundsHelper.RectangleToTrackExtents(
             new RectangleF {
               X = proposedStart,
               Width = length,
             }, this, trackIndex );
 
-          TrackSurrogate track = selectedTrack;
-          IOrderedEnumerable<ITimelineTrack> sortedTracks =
-            // All track elements on the same track as the selected one
+          TrackSegmentSurrogate trackSegment = selectedTrack;
+          IOrderedEnumerable<ITrackSegment> sortedTracks =
+            // All track segments on the same track as the selected one.
             _tracks[ trackIndex ].TrackElements
-              // Remove the selected tracks and the one we're the substitute for
-                                 .Where( t => t != track.SubstituteFor && !_selectedTracks.Contains( t ) )
-              // Sort all by their position on the track
+              // Remove the selected tracks and the one we're the substitute for.
+                                 .Where( t => t != trackSegment.SubstituteFor && !_selectedTracks.Contains( t ) )
+              // Sort all by their position on the track.
                                  .OrderBy( t => t.Start );
 
           if( BoundsHelper.IntersectsAny( proposed, sortedTracks.Select( t => BoundsHelper.GetTrackExtents( t, this ) ) ) ) {
             // Let's grab a list of the tracks so we can iterate by index.
-            List<ITimelineTrack> sortedTracksList = sortedTracks.ToList();
+            List<ITrackSegment> sortedTracksList = sortedTracks.ToList();
             // If delta points towards left, walk the sorted tracks from the left (respecting the proposed start)
-            // and try to find a non-colliding window between track elements.
+            // and try to find a non-colliding window between track segments.
             if( delta.X < 0 ) {
               for( int elementIndex = 0; elementIndex < sortedTracksList.Count(); elementIndex++ ) {
                 // If the right edge of the element is left of our proposed start, then it's too far left to be interesting.
@@ -910,7 +910,7 @@ namespace TimeBeam {
                   break;
                 }
 
-                // Does the next element in line collide with the end of our selected track?
+                // Does the next segment in line collide with the end of our selected track segment?
                 if( sortedTracksList[ elementIndex + 1 ].Start < proposedStart + length ) {
                   continue;
                 }
@@ -937,7 +937,7 @@ namespace TimeBeam {
                   break;
                 }
 
-                // Does the next element in line collide with the start of our selected track?
+                // Does the next segment in line collide with the start of our selected track segment?
                 if( sortedTracksList[ elementIndex - 1 ].End > proposedStart ) {
                   continue;
                 }
@@ -974,20 +974,20 @@ namespace TimeBeam {
     /// </param>
     /// <returns>The adjusted resizing delta that is acceptable for all selected tracks.</returns>
     private PointF AcceptableResizingDelta( PointF delta, bool adjustStart ) {
-      foreach( TrackSurrogate selectedTrack in _trackSurrogates ) {
-        // Calculate the proposed new start and end for the track depending on the adjustStart parameter and given delta..
+      foreach( TrackSegmentSurrogate selectedTrack in _trackSurrogates ) {
+        // Calculate the proposed new start and end for the track segment depending on the adjustStart parameter and given delta..
         float proposedStart = ( !adjustStart ) ? selectedTrack.SubstituteFor.Start : Math.Max( 0, selectedTrack.SubstituteFor.Start + ( delta.X * ( 1 / _renderingScale.X ) ) );
         float proposedEnd = ( adjustStart ) ? selectedTrack.SubstituteFor.End : Math.Max( 0, selectedTrack.SubstituteFor.End + ( delta.X * ( 1 / _renderingScale.X ) ) );
-        // Get the index of the selected track to use it as a basis for calculating the proposed new bounding box.
+        // Get the index of the selected track segment to use it as a basis for calculating the proposed new bounding box.
         int trackIndex = TrackIndexForTrack( selectedTrack );
-        // Use the calculated values to get a full screen-space bounding box for the proposed track location.
+        // Use the calculated values to get a full screen-space bounding box for the proposed track segment location.
         RectangleF proposed = BoundsHelper.RectangleToTrackExtents(
           new RectangleF {
             X = proposedStart,
             Width = proposedEnd - proposedStart,
           }, this, trackIndex );
 
-        // If the movement on this track would move it to the start of the timeline,
+        // If the movement on this track segment would move it to the start of the timeline,
         // cap the movement for all tracks.
         // TODO: It could be interesting to enable this anyway through a modifier key.
         if( adjustStart && proposedStart <= 0 ) {
@@ -995,20 +995,20 @@ namespace TimeBeam {
           return delta;
         }
 
-        TrackSurrogate track = selectedTrack;
-        IOrderedEnumerable<ITimelineTrack> sortedTracks =
-          // All track elements on the same track as the selected one
+        TrackSegmentSurrogate trackSegment = selectedTrack;
+        IOrderedEnumerable<ITrackSegment> sortedTracks =
+          // All track segments on the same track as the selected one.
           _tracks[ trackIndex ].TrackElements
-            // Add all track surrogates on the same track (except ourself)
-                               .Concat( _trackSurrogates.Where( t => t != track && TrackIndexForTrack( t ) == trackIndex ) )
-            // Remove the selected tracks and the one we're the substitute for
-                               .Where( t => t != track.SubstituteFor && !_selectedTracks.Contains( t ) )
-            // Sort all by their position on the track
+            // Add all track segment surrogates on the same track (except ourself).
+                               .Concat( _trackSurrogates.Where( t => t != trackSegment && TrackIndexForTrack( t ) == trackIndex ) )
+            // Remove the selected track segments and the one we're the substitute for.
+                               .Where( t => t != trackSegment.SubstituteFor && !_selectedTracks.Contains( t ) )
+            // Sort all by their position on the track.
                                .OrderBy( t => t.Start );
 
         if( BoundsHelper.IntersectsAny( proposed, sortedTracks.Select( t => BoundsHelper.GetTrackExtents( t, this ) ) ) ) {
           // Let's grab a list of the tracks so we can iterate by index.
-          List<ITimelineTrack> sortedTracksList = sortedTracks.ToList();
+          List<ITrackSegment> sortedTracksList = sortedTracks.ToList();
           if( adjustStart ) {
             for( int elementIndex = sortedTracksList.Count() - 1; elementIndex >= 0; elementIndex-- ) {
               if( sortedTracksList[ elementIndex ].Start >= selectedTrack.SubstituteFor.Start ) {
@@ -1065,35 +1065,35 @@ namespace TimeBeam {
       PointF location = new PointF( e.X, e.Y );
 
       if( ( e.Button & MouseButtons.Left ) != 0 ) {
-        // Check if there is a track at the current mouse position.
-        ITimelineTrack focusedTrack = TrackHitTest( location );
+        // Check if there is a track segment at the current mouse position.
+        ITrackSegment focusedTrackSegment = TrackHitTest( location );
 
-        if( null != focusedTrack ) {
-          // Was this track already selected?
-          if( !_selectedTracks.Contains( focusedTrack ) ) {
-            // Tell the track that it was selected.
-            InvokeSelectionChanged( new SelectionChangedEventArgs( focusedTrack.Yield(), null ) );
+        if( null != focusedTrackSegment ) {
+          // Was this track segment already selected?
+          if( !_selectedTracks.Contains( focusedTrackSegment ) ) {
+            // Notify everyone that the track segment was selected.
+            InvokeSelectionChanged( new SelectionChangedEventArgs( focusedTrackSegment.Yield(), null ) );
             // Clear the selection, unless the user is picking
             if( !IsKeyDown( Keys.Control ) ) {
               InvokeSelectionChanged( new SelectionChangedEventArgs( null, _selectedTracks ) );
               _selectedTracks.Clear();
             }
 
-            // Add track to selection
-            _selectedTracks.Add( focusedTrack );
+            // Add track segment to selection.
+            _selectedTracks.Add( focusedTrackSegment );
 
-            // If the track was already selected and Ctrl is down
-            // then the user is picking and we want to remove the track from the selection
+            // If the track segment was already selected and Ctrl is down
+            // then the user is picking and we want to remove the track segment from the selection.
           } else if( IsKeyDown( Keys.Control ) ) {
-            _selectedTracks.Remove( focusedTrack );
-            InvokeSelectionChanged( new SelectionChangedEventArgs( null, focusedTrack.Yield() ) );
+            _selectedTracks.Remove( focusedTrackSegment );
+            InvokeSelectionChanged( new SelectionChangedEventArgs( null, focusedTrackSegment.Yield() ) );
           }
 
           // Store the current mouse position. It'll be used later to calculate the movement delta.
           _dragOrigin = location;
 
           // Check whether the user wants to move or resize the selected tracks.
-          RectangleF trackExtents = BoundsHelper.GetTrackExtents( focusedTrack, this );
+          RectangleF trackExtents = BoundsHelper.GetTrackExtents( focusedTrackSegment, this );
           RectangleHelper.Edge isPointOnEdge = RectangleHelper.IsPointOnEdge( trackExtents, location, 3f, RectangleHelper.EdgeTest.Horizontal );
           if( isPointOnEdge != RectangleHelper.Edge.None ) {
             CurrentMode = BehaviorMode.RequestResizingSelection;
@@ -1142,16 +1142,16 @@ namespace TimeBeam {
           // Are we on the track label column?
           int trackIndex = TrackLabelHitTest( location );
           if( -1 < trackIndex ) {
-            IMultiPartTimelineTrack track = _tracks[ trackIndex ];
+            ITrack track = _tracks[ trackIndex ];
 
-            // SingleTrackToMultiTrackWrapper instances are implicitly created by the timeline itself.
-            // There is no need to invoke the method, as the single track element it contains will be notified by the loop below.
-            if( !( track is SingleTrackToMultiTrackWrapper ) ) {
+            // SingleElementToTrackWrapper instances are implicitly created by the timeline itself.
+            // There is no need to invoke the method, as the single track segment it contains will be notified by the loop below.
+            if( !( track is SingleElementToTrackWrapper ) ) {
               InvokeSelectionChanged( new SelectionChangedEventArgs( track.Yield(), null ) );
             }
 
-            foreach( ITimelineTrack trackElement in track.TrackElements ) {
-              // Toggle track in and out of selection.
+            foreach( ITrackSegment trackElement in track.TrackElements ) {
+              // Toggle track segment in and out of selection.
               if( _selectedTracks.Contains( trackElement ) ) {
                 _selectedTracks.Remove( trackElement );
                 InvokeSelectionChanged( new SelectionChangedEventArgs( null, trackElement.Yield() ) );
@@ -1166,12 +1166,12 @@ namespace TimeBeam {
             // Construct the correct rectangle spanning from the selection origin to the current cursor position.
             RectangleF selectionRectangle = RectangleHelper.Normalize( _selectionOrigin, location );
 
-            foreach( ITimelineTrack track in _tracks.SelectMany( t => t.TrackElements ) ) {
+            foreach( ITrackSegment track in _tracks.SelectMany( t => t.TrackElements ) ) {
               RectangleF boundingRectangle = BoundsHelper.GetTrackExtents( track, this );
 
-              // Check if the track item is selected by the selection rectangle.
+              // Check if the track segment is selected by the selection rectangle.
               if( SelectionHelper.IsSelected( selectionRectangle, boundingRectangle, ModifierKeys ) ) {
-                // Toggle track in and out of selection.
+                // Toggle track segment in and out of selection.
                 if( _selectedTracks.Contains( track ) ) {
                   _selectedTracks.Remove( track );
                   InvokeSelectionChanged( new SelectionChangedEventArgs( null, track.Yield() ) );
@@ -1185,7 +1185,7 @@ namespace TimeBeam {
 
         } else if( CurrentMode == BehaviorMode.MovingSelection || CurrentMode == BehaviorMode.ResizingSelection ) {
           // The moving operation ended, apply the values of the surrogates to the originals
-          foreach( TrackSurrogate surrogate in _trackSurrogates ) {
+          foreach( TrackSegmentSurrogate surrogate in _trackSurrogates ) {
             surrogate.CopyTo( surrogate.SubstituteFor );
           }
           _trackSurrogates.Clear();
@@ -1221,7 +1221,7 @@ namespace TimeBeam {
         // Ctrl+A - Select all
         InvokeSelectionChanged( new SelectionChangedEventArgs( null, _selectedTracks ) );
         _selectedTracks.Clear();
-        foreach( ITimelineTrack track in _tracks.SelectMany( t => t.TrackElements ) ) {
+        foreach( ITrackSegment track in _tracks.SelectMany( t => t.TrackElements ) ) {
           _selectedTracks.Add( track );
         }
         InvokeSelectionChanged( new SelectionChangedEventArgs( _selectedTracks, null ) );
