@@ -42,16 +42,5 @@
       target.Start = Start;
       target.End = End;
     }
-
-    /// <summary>
-    ///   Invoked when the user selects this item.
-    /// </summary>
-    public void Selected() {
-      // Nothing to do.
-    }
-
-    public void Deselected() {
-      // Nothing to do.
-    }
   }
 }
