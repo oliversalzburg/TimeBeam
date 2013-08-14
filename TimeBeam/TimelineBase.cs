@@ -1061,6 +1061,8 @@ namespace TimeBeam {
     protected override void OnMouseDown( MouseEventArgs e ) {
       base.OnMouseDown( e );
 
+      Focus();
+
       // Store the current mouse position.
       PointF location = new PointF( e.X, e.Y );
 
