@@ -145,7 +145,7 @@ namespace TimeBeam {
     ///   The scale at which to render the timeline.
     ///   This enables us to "zoom" the timeline in and out.
     /// </summary>
-    private PointF _renderingScale = new PointF( 1, 1 );
+    protected PointF _renderingScale = new PointF( 1, 1 );
 
     /// <summary>
     ///   The transparency of the background grid.
@@ -167,7 +167,7 @@ namespace TimeBeam {
     /// <summary>
     ///   The tracks currently placed on the timeline.
     /// </summary>
-    private readonly List<ITrack> _tracks = new List<ITrack>();
+    protected readonly List<ITrack> _tracks = new List<ITrack>();
 
     /// <summary>
     ///   The currently selected tracks.
@@ -333,7 +333,7 @@ namespace TimeBeam {
     /// <summary>
     ///   Recalculates appropriate values for scrollbar bounds.
     /// </summary>
-    private void RecalculateScrollbarBounds() {
+    protected virtual void RecalculateScrollbarBounds() {
       ScrollbarV.Max = (int)( ( _tracks.Count * ( TrackHeight + TrackSpacing ) ) * _renderingScale.Y );
       ScrollbarH.Max = (int)( _tracks.Max( t => t.TrackElements.Any() ? t.TrackElements.Max( te => te.End ) : 0 ) * _renderingScale.X );
       ScrollbarV.Refresh();
@@ -799,8 +799,8 @@ namespace TimeBeam {
         _renderingOffset = PointF.Add( _renderingOffsetBeforePan, new SizeF( delta ) );
 
         // Make sure to stay within bounds.
-        _renderingOffset.X = Math.Max( -ScrollbarH.Max, Math.Min( 0, _renderingOffset.X ) );
-        _renderingOffset.Y = Math.Max( -ScrollbarV.Max, Math.Min( 0, _renderingOffset.Y ) );
+        _renderingOffset.X = Math.Max( -ScrollbarH.Max, Math.Min( -ScrollbarH.Min, _renderingOffset.X ) );
+        _renderingOffset.Y = Math.Max( -ScrollbarV.Max, Math.Min( -ScrollbarV.Min, _renderingOffset.Y ) );
 
         // Update scrollbar positions. This will invoke a redraw.
         ScrollbarH.Value = (int)( -_renderingOffset.X );

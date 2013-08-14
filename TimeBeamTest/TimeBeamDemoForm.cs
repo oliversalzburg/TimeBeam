@@ -41,9 +41,10 @@ namespace TimeBeamTest {
 
       timeline1.SelectionChanged += TimelineSelectionChanged;
 
-
-      splineline1.AddTrack( new LinearSplineSegment(){Start = 0,End = 200,StartValue = -10f, EndValue = 10f} );
-
+      for( int i = 0; i < 10; i++ ) {
+        splineline1.AddTrack( new LinearSplineSegment(){Start = 0,End = 200,StartValue = -10f, EndValue = 10f} );  
+      }
+      
       // Register the clock with the timelines
       timeline1.Clock = _clock;
       splineline1.Clock = _clock;

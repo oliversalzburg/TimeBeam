@@ -76,7 +76,7 @@ namespace TimeBeam {
 
     #endregion
 
-    private HorizontalScrollbar ScrollbarH;
-    private VerticalScrollbar ScrollbarV;
+    protected HorizontalScrollbar ScrollbarH;
+    protected VerticalScrollbar ScrollbarV;
   }
 }
