@@ -494,7 +494,7 @@ namespace TimeBeam {
       // Grid is white so just take the alpha as the white value.
       Pen gridPen = new Pen( Color.FromArgb( GridAlpha, GridAlpha, GridAlpha ) );
       // Calculate the Y position of the first line.
-      int firstLineY = (int)( TrackHeight * _renderingScale.Y + trackAreaBounds.Y + _renderingOffset.Y );
+      int firstLineY = (int)( TrackHeight * _renderingScale.Y + trackAreaBounds.Y + _renderingOffset.Y + ScrollbarV.Min );
       // Calculate the distance between each following line.
       int actualRowHeight = (int)( ( TrackHeight ) * _renderingScale.Y + TrackSpacing );
       actualRowHeight = Math.Max( 1, actualRowHeight );
