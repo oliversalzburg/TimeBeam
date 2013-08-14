@@ -39,7 +39,6 @@ namespace TimeBeam {
     }
     #endregion
 
-
     #region Layout
     /// <summary>
     ///   How high a single track should be.
@@ -173,7 +172,7 @@ namespace TimeBeam {
     /// <summary>
     ///   The currently selected tracks.
     /// </summary>
-    private readonly List<ITrackSegment> _selectedTracks = new List<ITrackSegment>();
+    protected readonly List<ITrackSegment> _selectedTracks = new List<ITrackSegment>();
 
     /// <summary>
     ///   Which tracks are currently selected?
@@ -556,12 +555,12 @@ namespace TimeBeam {
     ///   Draw a list of tracks onto the timeline.
     /// </summary>
     /// <param name="tracks">The tracks to draw.</param>
-    private void DrawTracks( IEnumerable<ITrackSegment> tracks, Graphics graphics ) {
+    protected virtual void DrawTracks( IEnumerable<ITrackSegment> tracks, Graphics graphics ) {
 
       Rectangle trackAreaBounds = GetTrackAreaBounds();
 
       // Generate colors for the tracks.
-      List<Color> colors = ColorHelper.GetRandomColors( _tracks.Count );
+      List<Color> colors = ColorHelper.GetRandomColors( tracks.Count() );
 
       foreach( ITrackSegment track in tracks ) {
         // The extent of the track segment, including the border.
