@@ -41,8 +41,12 @@ namespace TimeBeamTest {
 
       timeline1.SelectionChanged += TimelineSelectionChanged;
 
-      // Register the clock with the timeline
+
+      splineline1.AddTrack( new LinearSplineSegment(){Start = 0,End = 200,StartValue = -10f, EndValue = 10f} );
+
+      // Register the clock with the timelines
       timeline1.Clock = _clock;
+      splineline1.Clock = _clock;
       // Activate the timer that invokes the clock to update.
       timer1.Enabled = true;
     }
@@ -63,6 +67,7 @@ namespace TimeBeamTest {
     private void timer1_Tick( object sender, EventArgs e ) {
       _clock.Update();
       timeline1.Tick();
+      splineline1.Tick();
     }
 
     private void TimeBeamDemoForm_KeyUp( object sender, KeyEventArgs e ) {

@@ -92,7 +92,7 @@
       <DependentUpon>AbstractScrollbar.cs</DependentUpon>
     </Compile>
     <Compile Include="Splineline.cs">
-      <SubType>UserControl</SubType>
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="Splineline.Designer.cs">
       <DependentUpon>Splineline.cs</DependentUpon>

@@ -12,9 +12,11 @@ using TimeBeam.Timing;
 
 namespace TimeBeam {
   /// <summary>
-  ///   The main host control.
+  ///   Used to host simple tracks with a start and an end.
   /// </summary>
   public partial class Timeline : TimelineBase {
-    
+    public Timeline() {
+      InitializeComponent();
+    }
   }
 }
