@@ -18,7 +18,7 @@ namespace TimeBeam.Helper {
     /// <returns>The bounding rectangle for the given track segment.</returns>
     internal static RectangleF GetTrackExtents( ITrackSegment trackSegment, TimelineBase timeline ) {
       int trackIndex = timeline.TrackIndexForTrack( trackSegment );
-      return RectangleToTrackExtents( new RectangleF( trackSegment.Start, 0, trackSegment.End - trackSegment.Start, 0 ), timeline, trackIndex );
+      return RectangleToTrackExtents( new RectangleF( trackSegment.Start, float.NaN, trackSegment.End - trackSegment.Start, float.NaN ), timeline, trackIndex );
     }
 
     /// <summary>
@@ -31,15 +31,17 @@ namespace TimeBeam.Helper {
     internal static RectangleF RectangleToTrackExtents( RectangleF rect, TimelineBase timeline, int assumedTrackIndex ) {
       Rectangle trackAreaBounds = timeline.GetTrackAreaBounds();
 
-      int actualRowHeight = (int)( ( timeline.TrackHeight ) * timeline.RenderingScale.Y + timeline.TrackSpacing );
+      int assumedRowHeight = (int)( float.IsNaN( rect.Height ) ? timeline.TrackHeight : rect.Height );
+
+      int actualRowHeight = (int)( assumedRowHeight * timeline.RenderingScale.Y + timeline.TrackSpacing );
       // Calculate the Y offset for the track segment.
-      int trackOffsetY = (int)( trackAreaBounds.Y + ( actualRowHeight * assumedTrackIndex ) + timeline.RenderingOffset.Y );
+      int trackOffsetY = (int)( trackAreaBounds.Top + ( actualRowHeight * assumedTrackIndex ) + timeline.RenderingOffset.Y );
 
       // Calculate the X offset for track segment.
-      int trackOffsetX = (int)( trackAreaBounds.X + ( rect.X * timeline.RenderingScale.X ) + timeline.RenderingOffset.X );
+      int trackOffsetX = (int)( trackAreaBounds.Left + ( rect.X * timeline.RenderingScale.X ) + timeline.RenderingOffset.X );
 
       // The extent of the track segment, including the border.
-      RectangleF trackExtent = new RectangleF( trackOffsetX, trackOffsetY, rect.Width * timeline.RenderingScale.X, timeline.TrackHeight * timeline.RenderingScale.Y );
+      RectangleF trackExtent = new RectangleF( trackOffsetX, trackOffsetY, rect.Width * timeline.RenderingScale.X, assumedRowHeight * timeline.RenderingScale.Y );
       return trackExtent;
     }
 
