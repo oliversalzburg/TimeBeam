@@ -24,7 +24,7 @@ namespace TimeBeam {
     #region Events
     /// <summary>
     ///   Invoked when the selection of track segments changed.
-    ///   Inspect <see cref="SelectedTracks"/> to see the current selection.
+    ///   Inspect <see cref="SelectedTracks" /> to see the current selection.
     /// </summary>
     public EventHandler<SelectionChangedEventArgs> SelectionChanged;
 
@@ -177,7 +177,9 @@ namespace TimeBeam {
     /// <summary>
     ///   Which tracks are currently selected?
     /// </summary>
-    public IEnumerable<ITrackSegment> SelectedTracks { get { return _selectedTracks; } }
+    public IEnumerable<ITrackSegment> SelectedTracks {
+      get { return _selectedTracks; }
+    }
     #endregion
 
     #region Interaction
@@ -503,21 +505,21 @@ namespace TimeBeam {
 
       // The distance between the minor ticks.
       float minorTickDistance = _renderingScale.X;
-      int minorTickOffset = (int)( _renderingOffset.X % minorTickDistance );
+      float minorTickOffset = ( _renderingOffset.X % minorTickDistance );
 
       // The distance between the regular ticks.
-      int tickDistance = (int)( 10f * _renderingScale.X );
+      float tickDistance = ( 10f * _renderingScale.X );
       tickDistance = Math.Max( 1, tickDistance );
 
       // The distance between minute ticks
-      int minuteDistance = tickDistance * 6;
+      float minuteDistance = tickDistance * 6;
 
       // Draw a vertical grid. Every 10 ticks, we place a line.
-      int tickOffset = (int)( _renderingOffset.X % tickDistance );
-      int minuteOffset = (int)( _renderingOffset.X % minuteDistance );
+      float tickOffset = ( _renderingOffset.X % tickDistance );
+      float minuteOffset = ( _renderingOffset.X % minuteDistance );
 
       // Calculate the distance between each column line.
-      int columnWidth = (int)( 10 * _renderingScale.X );
+      float columnWidth = ( 10 * _renderingScale.X );
       columnWidth = Math.Max( 1, columnWidth );
 
       // Should we draw minor ticks?
@@ -531,17 +533,19 @@ namespace TimeBeam {
         }
       }
 
+      float minuteHelper = -minuteOffset;
+
       // We start one tick distance after the offset to draw the first line that is actually in the display area
       // The one that is only tickOffset pixels away it behind the track labels.
       int minutePenColor = (int)( 255 * Math.Min( 255, GridAlpha * 2 ) / 255f );
       Pen brightPen = new Pen( Color.FromArgb( minutePenColor, minutePenColor, minutePenColor ) );
-      for( int x = tickOffset + tickDistance; x < Width; x += columnWidth ) {
+      for( float x = tickOffset + tickDistance; x < Width; x += columnWidth ) {
+        Pen penToUse = gridPen;
         // Every 60 ticks, we put a brighter, thicker line.
-        Pen penToUse;
-        if( ( x - minuteOffset ) % minuteDistance == 0 ) {
+        minuteHelper += tickDistance;
+        if( minuteHelper >= minuteDistance ) {
+          minuteHelper -= minuteDistance;
           penToUse = brightPen;
-        } else {
-          penToUse = gridPen;
         }
 
         graphics.DrawLine( penToUse, trackAreaBounds.X + x, trackAreaBounds.Y, trackAreaBounds.X + x, trackAreaBounds.Height );
@@ -605,7 +609,9 @@ namespace TimeBeam {
     /// </summary>
     private void DrawTrackLabels( Graphics graphics ) {
       foreach( ITrack track in _tracks ) {
-        if( !track.TrackElements.Any() ) continue;
+        if( !track.TrackElements.Any() ) {
+          continue;
+        }
         // We just need the height and Y-offset, so we get the extents of the first track segment.
         RectangleF trackExtents = BoundsHelper.GetTrackExtents( track.TrackElements.First(), this );
         RectangleF labelRect = new RectangleF( 0, trackExtents.Y, TrackLabelWidth, trackExtents.Height );
