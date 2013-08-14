@@ -50,7 +50,7 @@ namespace TimeBeam.Scrollbar {
       if( 0 == range ) return 0;
 
       // Start by defining the value on a scale of 0 to 1.
-      float relativeValue = (float)value / range;
+      float relativeValue = (float)( value + Math.Abs( Min ) ) / ( Math.Abs( Max ) + Math.Abs( Min ) );
       // Subtract 0.5 to get the offset for our value from the center of the bar
       float centerOffset = relativeValue - 0.5f;
 
