@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
@@ -14,7 +15,7 @@ namespace TimeBeam {
   /// <summary>
   ///   The main host control.
   /// </summary>
-  public partial class TimelineBase : Control {
+  public partial class TimelineBase : Control, IMessageFilter, IDisposable  {
     /// <summary>
     ///   How far does the user have to move the mouse (while holding down the left mouse button) until dragging operations kick in?
     ///   Technically, this defines the length of the movement vector.
@@ -135,7 +136,7 @@ namespace TimeBeam {
     /// <summary>
     ///   When the timeline is scrolled (panned) around, this offset represents the panned distance.
     /// </summary>
-    private PointF _renderingOffset = PointF.Empty;
+    protected PointF _renderingOffset = PointF.Empty;
 
     internal PointF RenderingScale {
       get { return _renderingScale; }
@@ -293,6 +294,7 @@ namespace TimeBeam {
     /// </summary>
     public TimelineBase() {
       InitializeComponent();
+      Application.AddMessageFilter(this);
       SetStyle(
         ControlStyles.AllPaintingInWmPaint | ControlStyles.Opaque | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw | ControlStyles.Selectable | ControlStyles.UserPaint, true );
 
@@ -1289,8 +1291,6 @@ namespace TimeBeam {
     protected override void OnMouseWheel( MouseEventArgs e ) {
       base.OnMouseWheel( e );
 
-      Focus();
-
       if( IsKeyDown( Keys.Alt ) ) {
         // If Alt is down, we're zooming.
         float amount = e.Delta / 1200f;
@@ -1311,18 +1311,20 @@ namespace TimeBeam {
 
         } else {
           // If Ctrl isn't  down, we're zooming vertically.
-          _renderingScale.Y += amount;
+          _renderingScale.Y += _renderingScale.Y * amount;
           // Don't zoom below 1%
           _renderingScale.Y = Math.Max( 0.01f, _renderingScale.Y );
 
           // We now also need to move the rendering offset so that the center of focus stays at the mouse cursor.
-          _renderingOffset.Y -= trackAreaBounds.Height * ( ( e.Location.Y - trackAreaBounds.Top ) / (float)trackAreaBounds.Height ) * amount;
-          _renderingOffset.Y = Math.Min( 0, _renderingOffset.Y );
-
+          // Calculate our relative offset from the scrollbars, which represent our absolute offsets.
+          float relativePositionOfCursorInWindow = ( (float)e.Location.Y / Height );
+          float normalizedPosition = relativePositionOfCursorInWindow - ( ( ScrollbarV.Min < 0 ) ? 0.5f : 0f );
+          _renderingOffset.Y += _renderingOffset.Y * amount - normalizedPosition * Height * amount;
+          
           // Update scrollbar position.
           ScrollbarV.Value = (int)( -_renderingOffset.Y );
-
         }
+
         RecalculateScrollbarBounds();
 
       } else {
@@ -1339,5 +1341,17 @@ namespace TimeBeam {
       Invalidate();
     }
     #endregion
+
+    public bool PreFilterMessage(ref Message m) {
+        // Trap WM_SYSKEYUPDOWN message for the ALT key
+        if ((Keys)m.WParam.ToInt32() == Keys.Menu) {
+            if (m.Msg == 0x104) { AltKeyPressed = true; return true; }
+            if (m.Msg == 0x105) { AltKeyPressed = false; return true; }
+          
+        }
+        return false;
+    }
+    private bool AltKeyPressed;
   }
+
 }

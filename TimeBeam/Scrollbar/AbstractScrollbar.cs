@@ -223,5 +223,25 @@ namespace TimeBeam {
     private void AbstractScrollbarPaint( object sender, PaintEventArgs e ) {
       e.Graphics.DrawImage( PixelMap, 0, 0 );
     }
+
+    /// <summary>
+    /// Calculate the relative position of a value within the scrollbars bounds.
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns>A value between 0 and 1 that indicates where the input value is to be placed within the bounds of the scrollbar.</returns>
+    public float AbsoluteToRelative( float value ) {
+      return ( value + Math.Abs( Min ) ) / Range;
+    }
+
+    /// <summary>
+    /// Calculate the absolute value for position within the scrollbar.
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public float RelativeToAbsolute( float value ) {
+      return ( Math.Abs( Min ) + Math.Abs( Max ) ) * value - Math.Abs( Min );
+    }
+
+    public int Range { get { return ( Math.Abs( Min ) + Math.Abs( Max ) ); } }
   }
 }

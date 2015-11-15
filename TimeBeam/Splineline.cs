@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using TimeBeam.Helper;
@@ -22,7 +23,9 @@ namespace TimeBeam {
     ///   Recalculates appropriate values for scrollbar bounds.
     /// </summary>
     protected override void RecalculateScrollbarBounds() {
-      float fullHeight = (int)( ( _tracks.Count * ( TrackHeight + TrackSpacing ) ) * _renderingScale.Y );
+      float smallestY = ( _tracks.Min( t => t.TrackElements.Any() ? t.TrackElements.OfType<ISplineSegment>().Min( te => Math.Min( te.StartValue, te.EndValue ) ) : 0 ) * _renderingScale.Y );
+      float largestY = ( _tracks.Max( t => t.TrackElements.Any() ? t.TrackElements.OfType<ISplineSegment>().Max( te => Math.Max( te.StartValue, te.EndValue ) ) : 0 ) * _renderingScale.Y );
+      float fullHeight = Math.Abs( smallestY ) + Math.Abs( largestY );
       ScrollbarV.Min = (int)( fullHeight / -2 );
       ScrollbarV.Max = (int)( fullHeight / 2 );
       ScrollbarH.Max = (int)( _tracks.Max( t => t.TrackElements.Any() ? t.TrackElements.Max( te => te.End ) : 0 ) * _renderingScale.X );
@@ -34,6 +37,7 @@ namespace TimeBeam {
     ///   Draw a list of splines onto the timeline.
     /// </summary>
     /// <param name="tracks">The splines to draw.</param>
+    /// <param name="graphics">The <see cref="Graphics"/> instance to draw into.</param>
     protected override void DrawTracks( IEnumerable<ITrackSegment> tracks, Graphics graphics ) {
       Rectangle trackAreaBounds = GetTrackAreaBounds();
 
@@ -46,8 +50,10 @@ namespace TimeBeam {
 
       foreach( ISplineSegment splineSegment in splineSegments ) {
         // The extent of the track segment, including the border.
-        RectangleF trackExtent = BoundsHelper.GetTrackExtents( splineSegment, this );
-
+        // Splines all share the same origin, so use index 0.
+        RectangleF trackExtent = BoundsHelper.RectangleToTrackExtents( new RectangleF( splineSegment.Start, splineSegment.StartValue, splineSegment.End - splineSegment.Start, splineSegment.EndValue ), this, 0 );
+        trackExtent.Offset( 0, trackAreaBounds.Height / 2f - trackExtent.Height / 2f );
+        
         // Don't draw track segments that aren't within the target area.
         if( !trackAreaBounds.IntersectsWith( trackExtent.ToRectangle() ) ) {
           continue;
@@ -70,6 +76,27 @@ namespace TimeBeam {
         } else {
           graphics.DrawLine( new Pen( trackColor ), trackExtent.Left, trackExtent.Bottom, trackExtent.Right, trackExtent.Top );
         }
+      }
+    }
+
+    /// <summary>
+    ///   Draws the background of the control.
+    /// </summary>
+    /// <param name="graphics">The <see cref="Graphics"/> instance to draw into.</param>
+    protected override void DrawBackground(Graphics graphics) {
+      //base.DrawBackground( graphics );
+
+      Rectangle trackAreaBounds = GetTrackAreaBounds();
+
+      float origin = trackAreaBounds.Height / 2f + trackAreaBounds.Top + _renderingOffset.Y;
+
+      graphics.DrawLine( Pens.White, trackAreaBounds.Left, origin, trackAreaBounds.Right, origin );
+
+      float step = _renderingScale.Y * 10f;
+      Pen pen = new Pen( Color.FromArgb( 40, 40, 40 ) );
+      for( float y = step; y < trackAreaBounds.Height / 2f; y += step ) {
+        graphics.DrawLine( pen, trackAreaBounds.Left, origin - y, trackAreaBounds.Right, origin - y );  
+        graphics.DrawLine( pen, trackAreaBounds.Left, origin + y, trackAreaBounds.Right, origin + y ); 
       }
     }
   }

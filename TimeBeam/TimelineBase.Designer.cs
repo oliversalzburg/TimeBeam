@@ -19,6 +19,7 @@ namespace TimeBeam {
       if( disposing && ( components != null ) ) {
         components.Dispose();
       }
+      Application.RemoveMessageFilter(this);
       base.Dispose( disposing );
     }
 
