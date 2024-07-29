@@ -1,6 +1,10 @@
 # TimeBeam
 
-A timeline control for .NET (which is still under development).
+> [!CAUTION]
+> This is still a pretty solid, and clear implementation of the principles of a timeline control. A lot of things are custom implementations that explain the _ideas_ of a timeline control to a certain degree.
+> While it was fun to work on it at the time, I could no longer accept changes to this repository today. Thus, it has been **archived as of 2024-07-29**. I hope the archived code can still be useful somehow :smile:
+
+A timeline control for .NET.
 
 ![Updated Look and Feel](https://i.imgur.com/kAzaej1.png)
 
@@ -8,13 +12,13 @@ A timeline control for .NET (which is still under development).
 ## Input
  <kbd>Shift</kbd> | <kbd>Ctrl</kbd> | <kbd>Alt</kbd> | Button/Key     | Action
 :----------------:|:---------------:|:--------------:|----------------|----------------------
-                  |                 |                | **MouseWheel** | Scroll vertically
-                  | <kbd>Ctrl</kbd> |                | **MouseWheel** | Scroll horizontally
-                  |                 | <kbd>Alt</kbd> | **MouseWheel** | Zoom vertically
-                  | <kbd>Ctrl</kbd> | <kbd>Alt</kbd> | **MouseWheel** | Zoom horizontally
-                  |                 |                | **Middle**     | Pan
-                  | <kbd>Ctrl</kbd> |                | <kbd>A</kbd>   | Select all
-                  | <kbd>Ctrl</kbd> |                | <kbd>D</kbd>   | Deselect all
+|                 |                 |                | **MouseWheel** | Scroll vertically
+|                 | <kbd>Ctrl</kbd> |                | **MouseWheel** | Scroll horizontally
+|                 |                 | <kbd>Alt</kbd> | **MouseWheel** | Zoom vertically
+|                 | <kbd>Ctrl</kbd> | <kbd>Alt</kbd> | **MouseWheel** | Zoom horizontally
+|                 |                 |                | **Middle**     | Pan
+|                 | <kbd>Ctrl</kbd> |                | <kbd>A</kbd>   | Select all
+|                 | <kbd>Ctrl</kbd> |                | <kbd>D</kbd>   | Deselect all
 
 ### Selection
 By default, anything that *intersects* with the selection rectangle is selected.  
